@@ -1,0 +1,174 @@
+{
+  "multiscales": [
+    {
+      "name": "Series 0",
+      "axes": [
+        {
+          "name": "c",
+          "type": "channel"
+        },
+        {
+          "name": "y",
+          "type": "space",
+          "unit": "micrometer"
+        },
+        {
+          "name": "x",
+          "type": "space",
+          "unit": "micrometer"
+        }
+      ],
+      "datasets": [
+        {
+          "path": "0",
+          "coordinateTransformations": [
+            {
+              "type": "scale",
+              "scale": [
+                1.0,
+                0.311962890625,
+                0.311962890625
+              ]
+            }
+          ]
+        },
+        {
+          "path": "1",
+          "coordinateTransformations": [
+            {
+              "type": "scale",
+              "scale": [
+                1.0,
+                0.62392578125,
+                0.62392578125
+              ]
+            }
+          ]
+        },
+        {
+          "path": "2",
+          "coordinateTransformations": [
+            {
+              "type": "scale",
+              "scale": [
+                1.0,
+                1.2478515625,
+                1.2478515625
+              ]
+            }
+          ]
+        },
+        {
+          "path": "3",
+          "coordinateTransformations": [
+            {
+              "type": "scale",
+              "scale": [
+                1.0,
+                2.495703125,
+                2.495703125
+              ]
+            }
+          ]
+        },
+        {
+          "path": "4",
+          "coordinateTransformations": [
+            {
+              "type": "scale",
+              "scale": [
+                1.0,
+                4.99140625,
+                4.99140625
+              ]
+            }
+          ]
+        },
+        {
+          "path": "5",
+          "coordinateTransformations": [
+            {
+              "type": "scale",
+              "scale": [
+                1.0,
+                9.9828125,
+                9.9828125
+              ]
+            }
+          ]
+        }
+      ],
+      "metadata": {},
+      "version": "0.4"
+    }
+  ],
+  "omero": {
+    "channels": [
+      {
+        "color": "00A1FF",
+        "coefficient": 1,
+        "active": true,
+        "label": "Hoechst",
+        "window": {
+          "min": 0,
+          "max": 255,
+          "start": 0,
+          "end": 255
+        },
+        "family": "linear",
+        "inverted": false
+      },
+      {
+        "color": "FF0000",
+        "coefficient": 1,
+        "active": true,
+        "label": "ChloA",
+        "window": {
+          "min": 0,
+          "max": 255,
+          "start": 0,
+          "end": 56
+        },
+        "family": "linear",
+        "inverted": false
+      },
+      {
+        "color": "D3D3D3",
+        "coefficient": 1,
+        "active": true,
+        "label": "T-PMT",
+        "window": {
+          "min": 0,
+          "max": 255,
+          "start": 1,
+          "end": 255
+        },
+        "family": "linear",
+        "inverted": false
+      },
+      {
+        "color": "FFAD00",
+        "coefficient": 1,
+        "active": true,
+        "label": "PE",
+        "window": {
+          "min": 0,
+          "max": 255,
+          "start": 0,
+          "end": 66
+        },
+        "family": "linear",
+        "inverted": false
+      }
+    ],
+    "rdefs": {
+      "defaultT": 0,
+      "model": "greyscale",
+      "defaultZ": 0
+    }
+  },
+  "_creator": {
+    "name": "NGFFMetadataHandler",
+    "version": "1.0"
+  }
+}

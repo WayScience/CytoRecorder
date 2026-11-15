@@ -1,0 +1,68 @@
+{
+  "source": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/",
+  "attribution": {
+    "study": "S-BIAD3204",
+    "authors": "Amzallag et al.",
+    "license": "CC0",
+    "imageId": "556d7ebf-98db-450a-a58d-23fe2379fefb",
+    "file": "BioImage study components/MKRN2 RING vs WT/RING_Rep2.czi",
+    "note": "Unmodified HTTP entity bodies from the public BIA converted OME-Zarr image; real microscopy, not generated controls."
+  },
+  "captured": "2026-11-14T02:44:56.193Z",
+  "entries": [
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/.zattrs",
+      "key": ".zattrs",
+      "file": "092e28ed221a23907552f7cf12d28ca0e36723cc533344d67fe609641e654b1c.body",
+      "sha256": "092e28ed221a23907552f7cf12d28ca0e36723cc533344d67fe609641e654b1c",
+      "bytes": 2246,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/.zgroup",
+      "key": ".zgroup",
+      "file": "65f3b337f17ee83238c2a65aea037430dcbfbed4ce59ae13a85130c2718d0719.body",
+      "sha256": "65f3b337f17ee83238c2a65aea037430dcbfbed4ce59ae13a85130c2718d0719",
+      "bytes": 23,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/2/.zarray",
+      "key": "2/.zarray",
+      "file": "425211985a44d0eb85f0feedc423561cd09d674ee05c510b854fd8c667151c1a.body",
+      "sha256": "425211985a44d0eb85f0feedc423561cd09d674ee05c510b854fd8c667151c1a",
+      "bytes": 323,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/2/0/0/0/0/0",
+      "key": "2/0/0/0/0/0",
+      "file": "6f6c17f6e06f3b539b15788f27b1b1b351b1ad41eaaf164eae828422dda9976f.body",
+      "sha256": "6f6c17f6e06f3b539b15788f27b1b1b351b1ad41eaaf164eae828422dda9976f",
+      "bytes": 113073,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/2/0/1/0/0/0",
+      "key": "2/0/1/0/0/0",
+      "file": "45a1480cdb7f1f3c34ea1c81df069ef9d3f43f5e252ce28d04d040e83cc35358.body",
+      "sha256": "45a1480cdb7f1f3c34ea1c81df069ef9d3f43f5e252ce28d04d040e83cc35358",
+      "bytes": 73627,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/2/0/2/0/0/0",
+      "key": "2/0/2/0/0/0",
+      "file": "ae7f0bb5e83e4bb06c8bf764df27104a7f404f5f0cbf16e5b88b6e57a78825d3.body",
+      "sha256": "ae7f0bb5e83e4bb06c8bf764df27104a7f404f5f0cbf16e5b88b6e57a78825d3",
+      "bytes": 58614,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    }
+  ]
+}

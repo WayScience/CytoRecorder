@@ -57,3 +57,5 @@ await writeFile(new URL('manifest.json', target), JSON.stringify(manifest, null,
 console.log(JSON.stringify(manifest, null, 2));
 const { setupModel } = await import('./setup-model.mjs');
 await setupModel();
+const { setupMorphem } = await import('./setup-morphem.mjs');
+await setupMorphem();

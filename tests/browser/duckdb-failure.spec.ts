@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures, source } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures, source } from './support/idr-fixtures';
 test('a corrupt original chunk fails without fallback and a fresh run recovers', async ({
   page,
   context,
@@ -16,7 +16,7 @@ test('a corrupt original chunk fails without fallback and a fresh run recovers',
     }
     return false;
   });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#status')).toHaveClass(/error/, { timeout: 20000 });
   await expect(page.locator('#raw')).toBeDisabled();
   expect(network.requests.filter((u) => u === source + '0/42/0/0')).toHaveLength(1);
@@ -34,7 +34,7 @@ test('a modified official extension is rejected before decoding, without a Zarri
   await context.route(pattern, (route) =>
     route.fulfill({ status: 200, body: Buffer.from([1, 2, 3]) }),
   );
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#status')).toContainText('extension size mismatch', {
     timeout: 20000,
   });

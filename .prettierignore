@@ -8,3 +8,6 @@ plan.md
 tests/fixtures/*.bin
 tests/browser/fixtures/*.body
 src/segmentation/STARDIST-LICENSE.txt
+# Original HTTP entity bodies are checksum-pinned, not reformatted JSON.
+tests/browser/fixtures/bia-search/*.json
+!tests/browser/fixtures/bia-search/manifest.json

@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 
 test('a pending local delete serializes editor mutations and cannot be closed mid-write', async ({
   page,
   context,
 }) => {
   await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await page.locator('#voice-all').click();
   await page.locator('#voice-text').fill('Note to delete.');
   await page.locator('#voice-save').click();

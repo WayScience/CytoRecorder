@@ -1,11 +1,151 @@
 {
   "version": "1",
-  "qualified": "2026-11-12",
+  "qualified": "2026-11-13",
   "samples": [
+    {
+      "id": "bia3204-ring-rep2",
+      "name": "BIA S-BIAD3204 · human U2OS · heat stress",
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/",
+      "qualified": "2026-11-13",
+      "biology": {
+        "title": "Human U2OS cells under heat stress",
+        "description": "Confocal microscopy of G3BP1/2-knockout U2OS cells expressing G3BP1-mCherry and the GFP-MKRN2 RING variant. mCher-T1 marks G3BP1/stress granules; EGFP-T2 marks GFP-MKRN2; DAPI-T3 marks nuclei. The study examines protein quality control in stress granules.",
+        "studyUrl": "https://www.ebi.ac.uk/biostudies/bioimages/studies/S-BIAD3204",
+        "publicationUrl": "https://doi.org/10.1038/s44319-026-00832-2"
+      },
+      "discovery": {
+        "api": "https://beta.bioimagearchive.org/search/v1/search/fts/image?query=U2OS&has.converted_image=True&size_x.lt=2049&size_y.lt=2049&size_c.gt=1&size_z.lt=2&size_t.lt=2&pagination.page_size=100",
+        "imageMetadata": "https://beta.bioimagearchive.org/search/v1/website/doc?uuid=556d7ebf-98db-450a-a58d-23fe2379fefb",
+        "imageId": "556d7ebf-98db-450a-a58d-23fe2379fefb",
+        "file": "BioImage study components/MKRN2 RING vs WT/RING_Rep2.czi"
+      },
+      "settings": {
+        "segmentation": "model",
+        "labelPath": "",
+        "level": 2,
+        "channels": [0, 1, 2],
+        "segmentChannel": 2,
+        "tile": 512,
+        "count": 1,
+        "target": 10,
+        "cropSize": 64
+      },
+      "ngff": "0.4",
+      "zarr": 2,
+      "dtype": "uint8",
+      "codecs": ["blosc-lz4"],
+      "axes": ["t", "c", "z", "y", "x"],
+      "shape": [1, 3, 1, 1437, 1437],
+      "levels": ["0", "1", "2", "3"],
+      "spatialScales": [
+        0.07057251107355492, 0.14114502214710983, 0.28229004429421967, 0.5645800885884393
+      ],
+      "spatialUnit": "micrometer",
+      "channelNames": ["mCher-T1", "EGFP-T2", "DAPI-T3"],
+      "labelGroup": null,
+      "semantics": "Default: single 2D plane at pyramid level 2 (359 × 359), with exploratory predicted nuclei; no archive-supplied labels",
+      "browserStatus": "Actual Chromium DuckDB-Zarr reads and StarDist inference verified against the remote OME-Zarr",
+      "attribution": "Amzallag et al. · BioImage Archive S-BIAD3204 · CC0",
+      "license": "CC0"
+    },
+    {
+      "id": "bia2247-tpr-nih3t3",
+      "name": "BIA S-BIAD2247 · mouse NIH3T3 · nuclear-pore condensates",
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2247/23b30776-e147-41f7-8ff2-83028840bb1d/372a6ff4-cb62-4da6-9374-7b9495446166.ome.zarr/0/",
+      "qualified": "2026-11-14",
+      "biology": {
+        "title": "Mouse NIH3T3 cells expressing TPR*-mRFP and Nup153-GFP",
+        "description": "Array-scan confocal microscopy of biomolecular condensates at the nuclear pore basket in NIH3T3 cells over-expressing TPR mutants, 24 hours after transfection. mRF12-T1 marks TPR*-mRFP; AF488-T2; DAPI-T3 marks nuclei. The study examines how condensates at the nuclear pore basket maintain global chromatin organization. Crops are centred on exploratory StarDist nucleus predictions.",
+        "studyUrl": "https://www.ebi.ac.uk/biostudies/bioimages/studies/S-BIAD2247",
+        "publicationUrl": "https://doi.org/10.1101/2025.07.18.665545"
+      },
+      "discovery": {
+        "api": "https://beta.bioimagearchive.org/search/v1/search/fts/image?query=NIH3T3&has.converted_image=True&size_x.lt=2049&size_y.lt=2049&size_c.gt=1&size_z.lt=2&size_t.lt=2&pagination.page_size=100",
+        "imageMetadata": "https://beta.bioimagearchive.org/search/v1/website/doc?uuid=23b30776-e147-41f7-8ff2-83028840bb1d",
+        "imageId": "23b30776-e147-41f7-8ff2-83028840bb1d",
+        "file": "NIH3T3-TPR*mutants/e20250108/e20250108_TPR*-mRFP_Nup153-GFP_24h_08_processed.czi"
+      },
+      "settings": {
+        "segmentation": "model",
+        "labelPath": "",
+        "level": 2,
+        "channels": [0, 1, 2],
+        "segmentChannel": 2,
+        "tile": 512,
+        "count": 1,
+        "target": 10,
+        "cropSize": 64
+      },
+      "ngff": "0.4",
+      "zarr": 2,
+      "dtype": ">u2",
+      "codecs": ["bytes-big", "blosc-lz4"],
+      "axes": ["t", "c", "z", "y", "x"],
+      "shape": [1, 3, 1, 1503, 1503],
+      "levels": ["0", "1", "2", "3"],
+      "spatialScales": [
+        0.035281545929876035, 0.07056309185975207, 0.14112618371950414, 0.2822523674390083
+      ],
+      "spatialUnit": "micrometer",
+      "channelNames": ["mRF12-T1", "AF488-T2", "DAPI-T3"],
+      "labelGroup": null,
+      "semantics": "Single 2D plane at pyramid level 2 (375 × 375); big-endian uint16; exploratory predicted nuclei, no archive-supplied labels",
+      "browserStatus": "Actual Chromium DuckDB-Zarr reads (including big-endian uint16) and StarDist inference verified against the remote OME-Zarr",
+      "attribution": "Boumendil et al. (CNRS) · BioImage Archive S-BIAD2247 · CC0",
+      "license": "CC0"
+    },
+    {
+      "id": "bia1735-dsb-nuclei",
+      "name": "BIA S-BIAD1735 · human nuclei · Data Science Bowl",
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD1735/050bd6dc-c2f1-4b23-90e7-2e0e6c0d0488/e568eaaf-643f-4e7d-ae0d-1b9d5541e20d.ome.zarr/0/",
+      "qualified": "2026-11-14",
+      "biology": {
+        "title": "Fluorescently stained human nuclei",
+        "description": "Fluorescence microscopy of nuclei from the 2018 Data Science Bowl subset used in Biaflows. The archive lists human as the organism but does not identify a specific cell line or stain for this image; channels are generic (Channel 0–2) and effectively replicated grayscale. Crops are centred on exploratory StarDist nucleus predictions.",
+        "studyUrl": "https://www.ebi.ac.uk/biostudies/bioimages/studies/S-BIAD1735",
+        "publicationUrl": "https://doi.org/10.1038/s41592-019-0612-7"
+      },
+      "discovery": {
+        "api": "https://beta.bioimagearchive.org/search/v1/search/fts/image?query=nuclei&has.converted_image=True&size_x.lt=2049&size_y.lt=2049&size_z.lt=2&size_t.lt=2&pagination.page_size=100",
+        "imageMetadata": "https://beta.bioimagearchive.org/search/v1/website/doc?uuid=050bd6dc-c2f1-4b23-90e7-2e0e6c0d0488",
+        "imageId": "050bd6dc-c2f1-4b23-90e7-2e0e6c0d0488",
+        "file": "biaflow/images/ade080c6618cbbb0a25680cf847f312b5e19b22bfe1cafec0436987ebe5b1e7e.tif"
+      },
+      "settings": {
+        "segmentation": "model",
+        "labelPath": "",
+        "level": 1,
+        "channels": [0],
+        "segmentChannel": 0,
+        "tile": 512,
+        "count": 1,
+        "target": 10,
+        "cropSize": 64
+      },
+      "ngff": "0.4",
+      "zarr": 2,
+      "dtype": "uint8",
+      "codecs": ["bytes-little", "blosc-lz4"],
+      "axes": ["t", "c", "z", "y", "x"],
+      "shape": [1, 3, 1, 520, 696],
+      "levels": ["0", "1", "2"],
+      "spatialScales": [1, 2, 4],
+      "spatialUnit": "pixel",
+      "channelNames": ["Channel 0", "Channel 1", "Channel 2"],
+      "labelGroup": null,
+      "semantics": "Single 2D plane at pyramid level 1 (260 × 348); exploratory predicted nuclei; the study also distributes reference masks but they are not loaded here",
+      "browserStatus": "Actual Chromium DuckDB-Zarr reads and StarDist inference verified against the remote OME-Zarr",
+      "attribution": "Caicedo, Carpenter et al. · BioImage Archive S-BIAD1735 · CC BY 4.0",
+      "license": "CC-BY-4.0"
+    },
     {
       "id": "idr0076-10501752",
       "name": "IDR0076 \u00b7 breast tumour tissue \u00b7 cell labels",
       "url": "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0076A/10501752.zarr/",
+      "biology": {
+        "title": "Breast tumour tissue",
+        "description": "2D cell-section masks, not whole 3D cells. The DNA1-191Ir channel highlights nuclei."
+      },
       "ngff": "0.4",
       "zarr": 2,
       "dtype": "float64",

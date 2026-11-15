@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 test('completed view has no decorative mosaic heading or success message', async ({
   page,
   context,
 }) => {
   await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#raw')).toBeEnabled({ timeout: 15000 });
   await expect(page.getByRole('heading', { name: 'Your mosaic', exact: true })).toHaveCount(0);
   await expect(page.locator('#status')).toBeHidden();
@@ -24,7 +24,7 @@ test('completed view has no decorative mosaic heading or success message', async
 });
 test('essential errors remain visible', async ({ page, context }) => {
   await installIdrFixtures(context);
-  await page.goto('/?count=100000');
+  await page.goto(idrUrl('/?count=100000'));
   await expect(page.locator('#status')).toBeVisible();
   await expect(page.locator('#status')).toContainText('Tile count');
 });

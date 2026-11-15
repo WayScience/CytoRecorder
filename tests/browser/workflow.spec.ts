@@ -1,7 +1,7 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { unzipSync, strFromU8 } from 'fflate';
-import { installIdrFixtures, fixtureManifest, source } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures, fixtureManifest, source } from './support/idr-fixtures';
 
 test.use({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
 test.setTimeout(120000);
@@ -93,7 +93,7 @@ test('offline original IDR bytes: metadata, 100 objects, inspector, display cont
   const network = await installIdrFixtures(context);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#result-count')).toHaveText('100 of 100 objects', { timeout: 15000 });
   await page.getByRole('button', { name: 'Show settings', exact: true }).click();
   const beforeInspect = network.requests.filter((url) => /\/\d+\/\d+\/\d+$/.test(url)).length;
@@ -182,7 +182,7 @@ test('CSV and Parquet exports follow the area-filtered visible subset and read b
   context,
 }, info) => {
   const network = await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await sample(page);
   await exportsReady(page);
   const original = await rows(page);
@@ -258,7 +258,7 @@ test('offline native ZIP, NPY dtypes and raw-pixel measurements round trip', asy
   context,
 }, info) => {
   const network = await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await sample(page);
   const archive = await download(page, 'raw', info);
   expect([...archive.subarray(0, 4)]).toEqual([80, 75, 3, 4]);
@@ -289,12 +289,12 @@ test('offline native ZIP, NPY dtypes and raw-pixel measurements round trip', asy
   expect(network.unexpected.filter((url) => !url.includes('extensions.duckdb.org'))).toEqual([]);
 });
 
-test('offline sampling URL reproduces exact object IDs and shuffle changes the seed', async ({
+test('offline sampling URL reproduces exact object IDs; a new seed changes them', async ({
   page,
   context,
 }) => {
   const network = await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await sample(page);
   const first = await nativeRows(page),
     url = page.url();
@@ -302,7 +302,13 @@ test('offline sampling URL reproduces exact object IDs and shuffle changes the s
   await page.goto(url);
   await sample(page);
   expect(await nativeRows(page)).toEqual(first);
-  await page.locator('#shuffle').click();
+  // The dedicated seed button (not the pull-random-image button) reseeds
+  // the same image; the seed must change and produce different objects.
+  // sample() may have left the settings panel open, so open it idempotently.
+  if (await page.locator('#source').isHidden())
+    await page.getByRole('button', { name: 'Show settings', exact: true }).click();
+  await page.locator('#new-seed').click();
+  await page.getByRole('button', { name: 'Sample objects', exact: true }).click();
   await expect(page.locator('#raw')).toBeEnabled({ timeout: 45000 });
   expect(new URL(page.url()).searchParams.get('seed')).not.toBe('42');
   expect((await nativeRows(page)).map((row) => row.cell_id)).not.toEqual(
@@ -326,7 +332,7 @@ test('offline cancellation discards delayed original transport and recovers clea
     }
     return false;
   });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await seen;
   await expect(page.locator('#cancel')).toBeEnabled();
   await page.locator('#cancel').click();
@@ -366,7 +372,7 @@ test('synthetic failures only: unavailable transport and unsupported axes recove
     }
     return false;
   });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#status')).toContainText('Cannot open OME-Zarr', { timeout: 30000 });
   await expect(page.locator('#raw')).toBeDisabled();
   failure = 'axes';

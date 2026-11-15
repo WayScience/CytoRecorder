@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 
 test('notes and badges distinguish identical real cell IDs from a different label source', async ({
   page,
   context,
 }) => {
   await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
   await page.locator('.tile-voice-notes').first().click();
   await page.locator('#voice-text').fill('Correct label source note.');

@@ -1,0 +1,33 @@
+{
+  "source": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD3204/556d7ebf-98db-450a-a58d-23fe2379fefb/cfc5cb9b-e8d3-4ebc-bf0f-7bbd57d7341d.ome.zarr/0/",
+  "level": 2,
+  "t": 0,
+  "z": 0,
+  "reference": {
+    "implementation": "Python numcodecs.Blosc",
+    "numcodecsVersion": "0.15.0"
+  },
+  "channels": [
+    {
+      "channel": 0,
+      "dtype": "uint8",
+      "shape": [359, 359],
+      "bytes": 128881,
+      "sha256": "2f7c8419e0f1873f465dd0a51a08ba7a09f4fda95f88b48b12ab4921bb2c7893"
+    },
+    {
+      "channel": 1,
+      "dtype": "uint8",
+      "shape": [359, 359],
+      "bytes": 128881,
+      "sha256": "fdb8acf613249471a5d4a12d2c3769e7f2d4a6f6f3b0d58469af4102ae71177f"
+    },
+    {
+      "channel": 2,
+      "dtype": "uint8",
+      "shape": [359, 359],
+      "bytes": 128881,
+      "sha256": "22da4014d2c927893e4ef248ce494f3ba4754f8ee724b60939bc6599ac005642"
+    }
+  ]
+}

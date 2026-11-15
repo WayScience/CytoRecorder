@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { installIdrFixtures, source } from './support/idr-fixtures';
-test('automatically samples the default image without pressing Sample', async ({
+import { idrUrl, installIdrFixtures, source } from './support/idr-fixtures';
+test('automatically samples an explicit legacy image without pressing Sample', async ({
   page,
   context,
 }) => {
   const network = await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#result-count')).toHaveText('100 of 100 objects', { timeout: 15000 });
   await expect(page.locator('#mosaic [role=gridcell]').first()).toBeVisible();
   expect(network.requests.filter((url) => url === source + '0/42/0/0')).toHaveLength(1);
@@ -13,7 +13,7 @@ test('automatically samples the default image without pressing Sample', async ({
 });
 test('choosing a supported preset automatically reloads its mosaic', async ({ page, context }) => {
   const network = await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#result-count')).toHaveText('100 of 100 objects', { timeout: 15000 });
   await page.getByRole('button', { name: 'Show settings', exact: true }).click();
   await page.locator('#preset').selectOption('custom');
@@ -29,7 +29,7 @@ test('automatically restores a shared seed, requested count and display settings
   context,
 }) => {
   const network = await installIdrFixtures(context);
-  await page.goto('/?seed=shared-auto&target=17&v.overlay=true');
+  await page.goto(idrUrl('/?seed=shared-auto&target=17&v.overlay=true'));
   await expect(page.locator('#result-count')).toHaveText('17 of 17 objects', { timeout: 15000 });
   const run = JSON.parse((await page.locator('#run-details').textContent())!);
   expect(run.settings.seed).toBe('shared-auto');
@@ -42,7 +42,7 @@ test('invalid shared settings remain actionable without silently loading default
   context,
 }) => {
   const network = await installIdrFixtures(context);
-  await page.goto('/?count=100000');
+  await page.goto(idrUrl('/?count=100000'));
   await expect(page.locator('#status')).toContainText('Tile count');
   await expect(page.locator('#cancel')).toBeDisabled();
   expect(network.requests).toHaveLength(0);
@@ -54,7 +54,7 @@ test('settings start collapsed and can be opened without replacing the mosaic', 
 }) => {
   const network = await installIdrFixtures(context);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#result-count')).toHaveText('100 of 100 objects', { timeout: 15000 });
   const toggle = page.getByRole('button', { name: 'Show settings', exact: true });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');

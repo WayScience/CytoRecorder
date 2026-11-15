@@ -51,6 +51,8 @@ a {
   align-items: center;
   border-bottom: 1px solid var(--line);
   gap: 30px;
+  max-width: 1800px;
+  margin: 0 auto;
 }
 .wordmark {
   font-size: 25px;
@@ -331,7 +333,27 @@ button:disabled {
 }
 .workspace {
   min-width: 0;
-  padding: 30px 30px 40px;
+  padding: 30px 34px 40px;
+}
+#image-biology {
+  margin-bottom: 20px;
+  max-width: 80ch;
+  overflow-wrap: anywhere;
+}
+#image-title {
+  margin: 0 0 8px;
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+#image-description {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+#image-attribution {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 .mosaic-header {
   display: flex;
@@ -580,6 +602,9 @@ dd {
   }
   .workspace {
     padding: 34px 42px;
+  }
+  .topbar {
+    padding: 0 42px;
   }
   .controls {
     padding: 34px 30px;

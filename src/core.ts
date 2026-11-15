@@ -270,9 +270,14 @@ export function validateSettings(s: Settings): Settings {
   if (s.seed.length > 128 || s.labelPath.length > 2048) throw Error('Seed or label path too long');
   return s.reader === 'browser' ? { ...s, reader: 'duckdb-zarr' } : s;
 }
-export function parseSettings(href: string): Settings {
-  const p = new URL(href).searchParams,
-    s: Settings = { ...DEFAULT_SETTINGS, channels: [...DEFAULT_SETTINGS.channels] };
+export function parseSettings(href: string, defaults = DEFAULT_SETTINGS): Settings {
+  const p = new URL(href).searchParams;
+  // Source-only links to the previous reference keep its channel/label defaults.
+  const base =
+    p.get('source')?.replace(/\/+$/, '') === DEFAULT_SETTINGS.source.replace(/\/+$/, '')
+      ? DEFAULT_SETTINGS
+      : defaults;
+  const s: Settings = { ...base, channels: [...base.channels] };
   for (const key of Object.keys(s) as (keyof Settings)[]) {
     if (!p.has(key)) continue;
     const value = p.get(key)!;

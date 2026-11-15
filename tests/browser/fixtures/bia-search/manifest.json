@@ -1,0 +1,271 @@
+{
+  "captured": "2026-11-14T20:57:07.809739+00:00",
+  "purpose": "Original BIA API bodies and OME-NGFF metadata for live-discovery boundary tests; no image pixels are synthesized.",
+  "source": "BioImage Archive, study licenses retained in API responses (including CC BY 4.0 and CC0).",
+  "entries": [
+    {
+      "url": "https://beta.bioimagearchive.org/search/v1/search/fts/image?has.converted_image=True&size_z.lt=2&size_t.lt=2&size_c.lt=5&size_x.gt=128&size_y.gt=128&size_x.lt=4097&size_y.lt=4097&pagination.page_size=5&pagination.page=1",
+      "file": "page-1.json",
+      "sha256": "dec3d631345bfac635e469cf86073a43b0f52244331a0896022059debbedb1d0",
+      "bytes": 70195,
+      "status": 200,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://beta.bioimagearchive.org/search/v1/search/fts/image?has.converted_image=True&size_z.lt=2&size_t.lt=2&size_c.lt=5&size_x.gt=128&size_y.gt=128&size_x.lt=4097&size_y.lt=4097&pagination.page_size=5&pagination.page=2",
+      "file": "page-2.json",
+      "sha256": "470f4fd62a9f9f12f29588b14c8ff09ab92feb14ca2053f16b0ae40020c11b45",
+      "bytes": 75525,
+      "status": 200,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://beta.bioimagearchive.org/search/v1/search/fts/image?has.converted_image=True&size_z.lt=2&size_t.lt=2&size_c.lt=5&size_x.gt=128&size_y.gt=128&size_x.lt=4097&size_y.lt=4097&pagination.page_size=5&pagination.page=100",
+      "file": "page-100.json",
+      "sha256": "9ea81ed76f26cdbbcc880261dd4f39b6ffb734841c9fb43703531c4df399cb3b",
+      "bytes": 61566,
+      "status": 200,
+      "contentType": "application/json"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/.zgroup",
+      "file": "d25862b42989e5e0.json",
+      "sha256": "7c578b275a7ccb234a2427d173bed71c9e7dc5d413052265b68ab5f9b2812ff3",
+      "bytes": 22,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/.zattrs",
+      "file": "9e0ff7d627a4c675.json",
+      "sha256": "4c898880df01ebc9c77072a0412d30496c8ff97ae6955117af2a6b307955560c",
+      "bytes": 3459,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/0/.zarray",
+      "file": "9fbb3b3baf3fa51b.json",
+      "sha256": "a1c06fb403e46cfbc57a28384fa2739dcd61649ef7fa67a54443d42179dd1fce",
+      "bytes": 329,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/1/.zarray",
+      "file": "4f49e245cd1da57e.json",
+      "sha256": "e5cccfede404c5803aaf19d313af13edafaba3dfb9288070562c32514728bc6a",
+      "bytes": 329,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/2/.zarray",
+      "file": "959aff77033a90d7.json",
+      "sha256": "ed2e4ef99cab6b858db44b0553666c3b5b722d6a229110d15f4080a6be6a5d7a",
+      "bytes": 325,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/3/.zarray",
+      "file": "bd612d1b51c4353c.json",
+      "sha256": "46b445e7eff625b1224f382bfe9640389720f12207e5bd66e3ae434806dfa7fe",
+      "bytes": 325,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/.zgroup",
+      "file": "89e9a7f275c9d18e.json",
+      "sha256": "7c578b275a7ccb234a2427d173bed71c9e7dc5d413052265b68ab5f9b2812ff3",
+      "bytes": 22,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/.zattrs",
+      "file": "615b02ac227988f3.json",
+      "sha256": "b958d9f78467d2a92b53b88a78126f169bc5631bf02f3cb5cec4b04a22014afe",
+      "bytes": 3461,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/0/.zarray",
+      "file": "dda2b21b77bedb09.json",
+      "sha256": "a1c06fb403e46cfbc57a28384fa2739dcd61649ef7fa67a54443d42179dd1fce",
+      "bytes": 329,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/1/.zarray",
+      "file": "a7612838692157b2.json",
+      "sha256": "e5cccfede404c5803aaf19d313af13edafaba3dfb9288070562c32514728bc6a",
+      "bytes": 329,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/2/.zarray",
+      "file": "5334b92422db21b8.json",
+      "sha256": "ed2e4ef99cab6b858db44b0553666c3b5b722d6a229110d15f4080a6be6a5d7a",
+      "bytes": 325,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/3/.zarray",
+      "file": "ca0902e02628266d.json",
+      "sha256": "46b445e7eff625b1224f382bfe9640389720f12207e5bd66e3ae434806dfa7fe",
+      "bytes": 325,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/.zgroup",
+      "file": "4a8a7d61ae0d3b1f.json",
+      "sha256": "7c578b275a7ccb234a2427d173bed71c9e7dc5d413052265b68ab5f9b2812ff3",
+      "bytes": 22,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/.zattrs",
+      "file": "4c65a6ab6a17fb23.json",
+      "sha256": "510e13c3d00a1ca0cc3f5ceca70eaddb73a16606421137cce30a7384f9750408",
+      "bytes": 3461,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/0/.zarray",
+      "file": "0e44f6c572782528.json",
+      "sha256": "a1c06fb403e46cfbc57a28384fa2739dcd61649ef7fa67a54443d42179dd1fce",
+      "bytes": 329,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/1/.zarray",
+      "file": "8e1995b55383acb1.json",
+      "sha256": "e5cccfede404c5803aaf19d313af13edafaba3dfb9288070562c32514728bc6a",
+      "bytes": 329,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/2/.zarray",
+      "file": "0a7b9cb6bc24b779.json",
+      "sha256": "ed2e4ef99cab6b858db44b0553666c3b5b722d6a229110d15f4080a6be6a5d7a",
+      "bytes": 325,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/3/.zarray",
+      "file": "676704ea998569e2.json",
+      "sha256": "46b445e7eff625b1224f382bfe9640389720f12207e5bd66e3ae434806dfa7fe",
+      "bytes": 325,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/2/0/0/0",
+      "file": "24b316ef95b7a2bc.bin",
+      "sha256": "fbb5c74c7c3f795562965b3efb4a6df3f61065852ff8c73da869772c8e152a96",
+      "bytes": 75732,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/2/1/0/0",
+      "file": "96c5ba69b58f8643.bin",
+      "sha256": "a490685acf7f7dabeb21a18392bf80883649769b7e5c9e4af2390ea5dd869b66",
+      "bytes": 6628,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/2/2/0/0",
+      "file": "f3997de43855f2f6.bin",
+      "sha256": "64d7af2d0abdc2b49f83e9dc6b0e8f37a7da9ebf9d42fdfe1cf590de622fcf12",
+      "bytes": 262160,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/0003d4e7-4a0a-4e6e-8728-d91a5dfcc0bd/ee34051d-0098-4308-8e9c-dd4230b28e34.ome.zarr/2/3/0/0",
+      "file": "b064a8de80e70a4e.bin",
+      "sha256": "6b5b95849d2fd84c04d02ebe2d1f044a227ea31f672e711a5a661b13578dff5b",
+      "bytes": 37851,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/2/0/0/0",
+      "file": "3eeb4a3c8e043a87.bin",
+      "sha256": "49515bb234e4b0a9a3870873561327239dece6636ce1739349017d7d4667dc1a",
+      "bytes": 104080,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/2/1/0/0",
+      "file": "20e1be3de69426a8.bin",
+      "sha256": "dd09c07843cf2da78a99a4d2fbf2a537326c7dfb4f2fa92c64d0a07b90df45f2",
+      "bytes": 50110,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/2/2/0/0",
+      "file": "deaab81f8e3f8914.bin",
+      "sha256": "6ac712ca972eaf59269e39038a19f9d8dbf2962c9cd494abfe3e0327531c9816",
+      "bytes": 255303,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/00069413-0892-4d42-8554-cb900e0476b9/f867aee0-7847-49e9-932e-443e8de81728.ome.zarr/2/3/0/0",
+      "file": "a6ca9909efa617ba.bin",
+      "sha256": "d5eb688cf15846d28499e480448446bcfe1f9f69cec8e0d0df016eb4b3c8b7c0",
+      "bytes": 73960,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/2/0/0/0",
+      "file": "4f11154615313970.bin",
+      "sha256": "36b8a083711702cb68bf7adaf483a6a9d6dc5bbd3a210112c933a12559ed4242",
+      "bytes": 55485,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/2/1/0/0",
+      "file": "a01cd98222b1b662.bin",
+      "sha256": "d4f0d3fa06d1bb355dfe12446a7a3c6c9fc158fcad59e33e624bac23bc146db2",
+      "bytes": 29547,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/2/2/0/0",
+      "file": "899f541c7f6e63d8.bin",
+      "sha256": "20cc742e78cbd1cbbf97ef011bd6ad384660b83f79a7f75c20073e907168d7ea",
+      "bytes": 239930,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/bioimaging-integrator-data/S-BIAD2258/000754bd-c2d9-4c18-9633-7d67290b2712/a2546286-3499-4285-b7c8-f2a4f87b82ce.ome.zarr/2/3/0/0",
+      "file": "6d2e15f48a97507b.bin",
+      "sha256": "79289bf1bfe9b479a9ebeb32c4b07bf34f691ff697c2f0308e23052ab6acdcdd",
+      "bytes": 35597,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    }
+  ]
+}

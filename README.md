@@ -4,7 +4,7 @@ A browser-only microscopy explorer: sample a 2D region, find labelled objects, a
 
 ## Run locally
 
-Node.js 22.18 or newer is required.
+Node.js 22.18 or newer is required. First-time asset setup also needs Python 3.10 or newer (standard library only).
 
 ```sh
 npm ci
@@ -12,14 +12,14 @@ npm run setup:assets
 npm run dev
 ```
 
-Open the localhost address printed by Vite. Asset setup copies the pinned DuckDB/ONNX runtimes and downloads a checksum-verified 5.9 MB StarDist model. Generated binaries are ignored by Git; do not skip setup on a clean checkout. The default label workflow does not need neural inference, but setup prepares every advertised backend.
+Open the localhost address printed by Vite. Asset setup copies the pinned DuckDB/ONNX runtimes, downloads a checksum-verified 5.9 MB StarDist model, and reproduces the 86 MB MorphEm graph from pinned upstream weights (175 MB first-time download). Existing verified assets are reused. Generated binaries are ignored by Git; do not skip setup on a clean checkout. The default BIA reference uses StarDist nuclei inference; the IDR label preset remains available without inference.
 
-1. Open the page: **IDR0076 / verified cell labels** loads automatically and collects up to 100 objects. Settings start collapsed so the mosaic gets the full width.
-2. Use **Show settings** to choose another preset (loads automatically) or adjust sampling controls, then **Sample objects** to apply manual edits. **Shuffle & sample** and **Cancel** stay visible outside the sidebar.
+1. Open an unpinned page: the app queries the **BioImage Archive API** for a new fluorescence image and collects up to 10 exploratory nucleus-centred crops. Discovery currently searches single-plane human/mouse DAPI datasets with 1–4 channels and supported image sizes, then checks actual NGFF axes, channels, pyramid levels, codecs and chunk budgets. Biological context, exact image identity, study and license appear above the mosaic. Results are not restricted to the bundled examples.
+2. **Pull random new image** makes another live search, excluding studies and images already visited in this tab. History survives reload through session storage (memory-only when storage is blocked); it is never reset to cycle old datasets. If discovery fails, the current image and exports stay available with an explicit error. **Cancel** aborts discovery/loading. Use **Show settings** for presets/manual sampling; the seed button reseeds the current image rather than discovering another one.
 3. Change order, area/intensity filters, channel visibility, contrast, context and outlines without downloading the image again. Click a crop to inspect its mask, source region, coordinates, native measurements and physical scale.
 4. Copy a reproducible URL or export the visible objects. CSV/Parquet exports follow the current area/intensity filters. There is no SQL editor in the demo.
 
-A shared URL restores the sampling/display settings and loads the mosaic automatically. Invalid shared settings show an error without silently loading default data. Use Cancel to stop an automatic load.
+A shared URL restores the exact image and sampling/display settings, rather than discovering another image. Explicit `?reference=<sample id>` links still select the three checked examples; these are reproducibility fixtures, not a discovery limit. Invalid shared settings show an error without silently loading default data. Use Cancel to stop an automatic load.
 
 ## Local voice notes
 
@@ -33,8 +33,17 @@ Each mosaic tile has a microphone button opening a **Voice notes** box. The insp
 
 Microphone capture needs HTTPS (GitHub Pages) or localhost and permission after an explicit click. No special server routes, cross-origin isolation or WebGPU are required. See [voice implementation and browser checks](docs/voice-notes.md) and [speech evaluation](docs/voice-evaluation.md). Pushing changes to `main` automatically publishes them through the Pages workflow.
 
+## Automatic MorphEm features
+
+After a sample completes, the app automatically extracts MorphEm features from each native object crop in a dedicated worker: 384 values per selected channel. A progress line shows how many crops are ready, with pause/resume and retry controls. The first run loads the bundled 86 MB model; no crops are uploaded.
+
+CSV/Parquet exports include completed features and model/preprocessing provenance. Rows still waiting for inference have `morphem_status: pending` and null feature values, not zeros. Export again after completion for a fully embedded dataset. The inspector's **MorphEm features** button prioritizes an unfinished crop in the same queue or downloads its cached result as JSON. Display contrast never affects inference inputs or native measurements.
+
+Recording a voice note terminates the feature worker immediately; closing voice notes resumes unfinished crops unless you manually paused them. Changing images cancels the previous queue and rejects its late results. See [model transforms, verification and limits](docs/morphem-features.md).
+
 ## Included real datasets
 
+- **BIA S-BIAD3204 / RING_Rep2:** the default fixed reference, discovered through the BIA API. Confocal microscopy of heat-stressed human U2OS G3BP1/2-knockout cells expressing G3BP1-mCherry and a GFP-MKRN2 RING variant. Three channels: mCher-T1 (G3BP1), EGFP-T2 (GFP-MKRN2), and DAPI-T3 (nuclei). Amzallag et al., CC0. The 359 × 359 level-2 preview uses DAPI for exploratory StarDist nuclei predictions, not whole-cell or granule segmentation. The beta search API is not needed at runtime. See [API discovery, biology and qualification](docs/bia-reference.md).
 - **IDR0076 / 10501752:** 50-channel 2D breast-tumour tissue image with matching cell-section instance masks. Default display is channel 42, DNA1-191Ir; this intentionally overrides that channel's inactive metadata flag. Ali et al., CC BY 4.0. No calibrated spatial unit is supplied, so coordinates remain pixels.
 - **IDR0033 / BR00109990_C2 / image 0:** the supplied NGFF 0.5 Cell Painting source. Five channels, already 2D (`c,y,x`), with no Z axis or existing masks. Choose pretrained StarDist nuclei segmentation or the classical baseline. Nuclei are not whole-cell boundaries. Direct chunk downloads have shown transient interruptions; the reader retries once and never substitutes data or a different backend.
 
@@ -59,7 +68,7 @@ Native pixel arrays and label IDs are preserved. Means use only the object's pix
 
 Sampling shuffles a non-overlapping image partition, then seeded object candidates within each region. It stops at the target or tile budget. Region sampling is **not uniform cell sampling**, and a mosaic is not a statistically representative cohort. Border objects are excluded by default. Stable image/label IDs deduplicate existing instances; inferred labels are scoped to region and backend.
 
-Limits: 32 regions, 128/256/512 px region sizes, 1–4 selected channels, target 1–1000 objects, four concurrent chunk requests, one segmentation job, 24 MiB compressed cache per source, 16 MiB per HTTP object, 64 MiB aggregate decoded-chunk reservation across concurrent reads, 96 MiB image+label response budget, and 48 MiB retained crop/mask arrays. These are logical budgets, not a browser process-memory guarantee. Runtime/model memory is additional. Cancellation terminates the processing worker; successful runs retain the idle model session for the next sample unless a voice task releases it. No partial run is exported after cancellation or failure.
+Limits: 32 regions, 128/256/512 px region sizes, 1–4 selected channels, target 1–1000 objects, four concurrent chunk requests, one segmentation job, 24 MiB compressed cache per source, 16 MiB per HTTP object, 64 MiB aggregate decoded-chunk reservation across concurrent reads, 96 MiB image+label response budget, and 48 MiB retained crop/mask arrays. These are logical budgets, not a browser process-memory guarantee. Runtime/model memory is additional. Cancellation terminates the processing worker; successful samples release the image-processing worker before background feature extraction, and feature completion releases its model worker. No partial run is exported after cancellation or failure.
 
 ## Exports
 
@@ -81,7 +90,7 @@ npm run format:check
 npm audit --audit-level=moderate
 ```
 
-Unit/scientific tests and browser regression fixtures are offline. Browser fixtures retain actual original IDR metadata/compressed chunks, not generated microscopy. `npm run validate:live` separately checks real remote data against the independent Python reference and may fail on network/CORS changes; see [scientific validation](docs/scientific-validation.md).
+Unit/scientific tests and browser regression fixtures are offline. Browser fixtures retain actual original BIA/IDR metadata and compressed chunks, not generated microscopy. `uv run scripts/validate-bia-reference.py` independently checks the BIA native-pixel hashes; browser tests compare DuckDB-Zarr against those hashes. `npm run validate:live` separately checks real remote data against the independent Python reference and may fail on network/CORS changes; see [scientific validation](docs/scientific-validation.md).
 
 An optional segmentation evaluation and a separate direct-store DuckDB-Zarr bounds audit are documented separately. The production reader uses complete bounded chunk views; the direct-store audit documents why whole-source WHERE/bounds is not used.
 

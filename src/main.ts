@@ -10,15 +10,20 @@ import {
 import type { Cell, RunResult, Progress } from './pipeline';
 import type { NgffMetadata, Alignment } from './sources/browser';
 import type { NetworkProgress } from './sources/read-session';
+import { datasetForSource, referenceForDate, REFERENCE_POOL, registerDataset } from './datasets';
+import { LiveImageDiscovery, archiveImageId, describeArchiveSource } from './discovery';
 import { drawCrop, seededOrder } from './render';
 import { download, cropArchive, provenance } from './exports';
+import { MorphEmBackground } from './features/background';
+import { MorphEmClient } from './features/client';
+import { MORPHEM_PREPROCESSING } from './features/config';
 import { VoiceNotesPanel } from './voice/VoiceNotesPanel';
 import { associationKey, contextForCell } from './voice/context';
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 $('#app').innerHTML = `
 <header class="topbar"><a class="wordmark" href="./">musivarium<span class="mark" aria-hidden="true">▦</span></a><button id="about-toggle" type="button" class="about-toggle"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.3"></circle><circle cx="8" cy="4.7" r="0.9" fill="currentColor"></circle><path d="M8 7.2v4.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>About</button><a class="source-link" href="https://github.com/d33bs/musivarium" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg>Source</a></header>
 <main class="settings-collapsed"><aside id="controls-panel" class="controls" hidden><div class="controls-heading"><button id="close-settings" type="button" class="secondary" aria-label="Hide settings">Hide ×</button></div>
-<form id="settings"><label for="preset">Sample dataset</label><select id="preset"><option value="labels">IDR0076 · verified cell labels</option><option value="idr0033">IDR0033 · supplied source</option><option value="custom">Your OME-Zarr image</option></select>
+<form id="settings"><label for="preset">Sample dataset</label><select id="preset"><option value="reference">BIA · discover a new image</option><option value="labels">IDR0076 · verified cell labels</option><option value="idr0033">IDR0033 · supplied source</option><option value="custom">Your OME-Zarr image</option></select>
 <label for="source">OME-Zarr image-group URL</label><input id="source" name="source" type="url" required spellcheck="false"><p class="hint">An image group, not a plate or array. Direct HTTPS reads; no server upload.</p>
 <button type="button" id="inspect" class="secondary full">Inspect metadata</button><div id="metadata" class="metadata" hidden></div>
 <div class="two"><div><label for="reader">Image reader</label><select id="reader"><option value="duckdb-zarr">DuckDB-Zarr</option></select></div><div><label for="segmentation">Find objects with</label><select id="segmentation"><option value="classical">Classical baseline</option><option value="model">Pretrained nuclei model</option><option value="labels">Existing labels</option></select></div></div>
@@ -38,23 +43,29 @@ $('#app').innerHTML = `
 <label for="size">Crop size</label><input id="size" type="range" min="72" max="180" value="112">
 <div class="two"><label class="check"><input id="overlay" type="checkbox"> Outlines</label><label class="check"><input id="context" type="checkbox" checked> Context</label></div>
 </aside>
-<section class="workspace" aria-label="Object mosaic"><div class="mosaic-header"><div class="mosaic-actions"><button id="controls-toggle" type="button" class="secondary" aria-controls="controls-panel" aria-expanded="false">Show settings</button><button id="shuffle" type="button" class="primary">Shuffle & sample</button><button id="cancel" type="button" class="secondary" disabled>Cancel</button><button id="share" class="secondary">Copy reproducible link</button></div></div>
+<section class="workspace" aria-label="Object mosaic"><section id="image-biology" aria-label="Biological context"><h1 id="image-title"></h1><p id="image-description"></p><p id="image-attribution"></p><p id="image-plane" class="hint"></p></section><div class="mosaic-header"><div class="mosaic-actions"><button id="controls-toggle" type="button" class="secondary" aria-controls="controls-panel" aria-expanded="false">Show settings</button><button id="shuffle" type="button" class="primary">Pull random new image</button><button id="cancel" type="button" class="secondary" disabled>Cancel</button><button id="share" class="secondary">Copy reproducible link</button></div></div>
 <div id="status" class="status" role="status" aria-live="polite" hidden></div><div id="reading-progress" class="reading-progress" hidden><div class="reading-heading"><span>Image / label transfer</span><span id="read-elapsed">0.0 s</span></div><progress id="progress" max="1" aria-label="Image and label download progress" aria-describedby="read-summary" title="Download totals cover discovered requests, not an estimated overall job size"></progress><div id="read-summary" class="read-summary">Waiting for the source…</div><div id="read-file" class="read-file"></div></div>
-<div id="metrics" class="metrics" hidden></div><div id="warnings" class="warnings" hidden></div>
+<div class="hint" id="morphem-panel" hidden><span id="morphem-status" role="status" aria-live="polite"></span> <button id="morphem-pause" type="button" class="secondary">Pause features</button><button id="morphem-retry" type="button" class="secondary" hidden>Retry features</button></div><div id="metrics" class="metrics" hidden></div><div id="warnings" class="warnings" hidden></div>
 <div class="result-count" id="result-count" role="status" aria-live="polite">No objects sampled yet</div>
 <div id="mosaic-scroll" class="mosaic-scroll" tabindex="0" aria-label="Scrollable single-object mosaic"><div id="empty" class="empty"><span class="empty-glyph" aria-hidden="true">▦</span><p>Small samples.<br>Unexpected details.</p><span>Choose a source, a plane, and a seed.</span></div><div id="mosaic" role="grid" aria-label="Single-object image crops"></div></div>
 <div class="mosaic-caption">Each tile is one object-centered crop, shown in grayscale with a green outline on the focused instance. Click or press Enter to inspect. Display contrast is per crop; means are measured on raw pixels.</div>
 <p class="credit" id="credit">Default: IDR0076, Ali et al., CC BY 4.0. Verified 2D tissue cell labels. Display override: channel 42, DNA1-191Ir. Images hosted by IDR / EMBL-EBI.</p><div class="export-row"><span>Export this view</span><button id="csv" class="secondary" disabled>CSV</button><button id="parquet" class="secondary" disabled>Parquet</button><button id="raw" class="secondary" disabled>Native crops ZIP</button><button id="mosaic-png" class="secondary" disabled>Mosaic PNG</button><button id="manifest" class="secondary" disabled>Run JSON</button></div>
 <section id="voice-notes" aria-label="Local voice notes"></section><pre id="run-details" hidden>No run yet.</pre></section></main>
 <dialog id="about"><div class="dialog-head"><h2>About</h2><button id="close-about" class="secondary" aria-label="Close about dialog">Close ×</button></div><p>musivarium samples single-plane, single-object crops from large OME-NGFF / IDR microscopy images, directly in the browser. No image data is uploaded to a server.</p><ul class="about-tech"><li><a href="https://ngff.openmicroscopy.org/" target="_blank" rel="noopener">OME-NGFF / OME-Zarr</a> — the chunked, cloud-native image format read here.</li><li><a href="https://github.com/xqlsystems/duckdb-zarr" target="_blank" rel="noopener">DuckDB-Zarr</a> — decodes original Zarr chunks and reads image and label pixels through SQL in WASM. Bounded browser downloads feed complete single-chunk in-memory views; source coordinates are preserved.</li><li><a href="https://duckdb.org/docs/api/wasm/overview" target="_blank" rel="noopener">DuckDB-WASM</a> — local SQL engine behind the CSV/Parquet export.</li><li><a href="https://onnxruntime.ai/docs/tutorials/web/" target="_blank" rel="noopener">ONNX Runtime Web</a> — runs the pretrained StarDist nuclei model client-side.</li><li><a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener">Transformers.js</a> + <a href="https://huggingface.co/onnx-community/whisper-tiny.en" target="_blank" rel="noopener">Whisper Tiny English</a> — optional local voice transcription in a dedicated worker, using ONNX Runtime Web. Model downloads happen on first transcription, not page load. Notes are saved only in this browser’s IndexedDB; audio is not stored or uploaded.</li><li><a href="https://github.com/101arrowz/fflate" target="_blank" rel="noopener">fflate</a> — native-crop ZIP archive export.</li><li><a href="https://vite.dev/" target="_blank" rel="noopener">Vite</a> + <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener">TypeScript</a> — build tooling and app code.</li></ul><p class="hint">Source: <a href="https://github.com/d33bs/musivarium" target="_blank" rel="noopener">github.com/d33bs/musivarium</a></p></dialog>
-<dialog id="inspector"><div class="dialog-head"><h2>Object inspector</h2><button id="close" class="secondary" aria-label="Close object inspector">Close ×</button></div><div class="inspector-grid"><div><canvas id="inspector-canvas" aria-label="Selected object crop"></canvas><p class="hint">One plane, native pixel aspect ratio.</p><button id="crop-png" class="secondary">Save preview PNG</button><button id="inspector-voice" class="secondary" type="button">Voice notes</button></div><div><h3 id="object-title"></h3><dl id="object-fields"></dl><canvas id="origin" width="320" height="220" aria-label="Source coordinate map"></canvas><p class="hint">Source-coordinate map, not a whole-image download. Boxes mark sampled regions.</p><a id="source-link" target="_blank" rel="noopener">Open source in NGFF validator ↗</a></div></div></dialog>`;
+<dialog id="inspector"><div class="dialog-head"><h2>Object inspector</h2><button id="close" class="secondary" aria-label="Close object inspector">Close ×</button></div><div class="inspector-grid"><div><canvas id="inspector-canvas" aria-label="Selected object crop"></canvas><p class="hint">One plane, native pixel aspect ratio.</p><button id="crop-png" class="secondary">Save preview PNG</button><button id="inspector-morphem" class="secondary" type="button">MorphEm features</button><button id="inspector-voice" class="secondary" type="button">Voice notes</button></div><div><h3 id="object-title"></h3><dl id="object-fields"></dl><canvas id="origin" width="320" height="220" aria-label="Source coordinate map"></canvas><p class="hint">Source-coordinate map, not a whole-image download. Boxes mark sampled regions.</p><a id="source-link" target="_blank" rel="noopener">Open source in NGFF validator ↗</a></div></div></dialog>`;
+const archiveDiscovery = new LiveImageDiscovery();
+let discoveryAbort: AbortController | undefined;
 let settings: Settings;
 let initialSettingsValid = true;
+const dayReference = referenceForDate(
+  new Date(),
+  new URL(location.href).searchParams.get('reference'),
+);
 try {
-  settings = parseSettings(location.href);
+  settings = parseSettings(location.href, dayReference);
 } catch (e) {
   initialSettingsValid = false;
-  settings = { ...DEFAULT_SETTINGS };
+  settings = { ...dayReference, channels: [...dayReference.channels] };
   setStatus(String(e), true);
 }
 const hiddenChannels = new Set<number>();
@@ -69,15 +80,43 @@ let result: RunResult | undefined,
   firstBatchMs = 0,
   running = false;
 const voiceCounts = new Map<string, number>();
+let featurePreparation: Promise<void> = Promise.resolve();
+const morphem = new MorphEmBackground(new MorphEmClient(), (state) => {
+  $('#morphem-panel').hidden = state.phase === 'idle';
+  $('#morphem-status').textContent =
+    state.phase === 'complete'
+      ? `MorphEm ready: ${state.completed} objects embedded; features included in CSV/Parquet exports.`
+      : state.phase === 'error'
+        ? `MorphEm unavailable: ${state.error} (${state.completed}/${state.total} ready).`
+        : `MorphEm: embedded ${state.completed}/${state.total} objects${state.phase === 'paused' ? ' · paused' : ' in the background…'}`;
+  button('morphem-retry').hidden = state.phase !== 'error';
+  button('morphem-pause').hidden = state.phase === 'complete' || state.phase === 'error';
+});
+let manuallyPaused = false;
+button('morphem-pause').onclick = () => {
+  manuallyPaused = !manuallyPaused;
+  if (manuallyPaused) morphem.pause('manual');
+  else morphem.resume('manual');
+  button('morphem-pause').textContent = manuallyPaused ? 'Resume features' : 'Pause features';
+};
+button('morphem-retry').onclick = () => morphem.retry();
+window.addEventListener('pagehide', () => {
+  discoveryAbort?.abort();
+  morphem.stop();
+});
 const voiceNotes = new VoiceNotesPanel($('#voice-notes'), {
+  onClose: () => morphem.resume('voice'),
   prepareRecording: () => {
     if (running)
       throw Error(
         'Wait for image processing to finish, or cancel it before recording. Manual notes remain available.',
       );
-    // Results/crops stay intact; release the idle StarDist session before ASR allocates its own.
+    // Results/crops stay intact; release the idle StarDist session before ASR
+    // allocates its own, and pause background MorphEm featurization (it shares
+    // the ORT-WASM runtime with ASR; ASR must not compete for it).
     worker?.terminate();
     worker = undefined;
+    morphem.pause('voice');
   },
   onChange: (notes) => {
     voiceCounts.clear();
@@ -117,7 +156,36 @@ function select(id: string) {
 function button(id: string) {
   return $<HTMLButtonElement>(`#${id}`);
 }
+function renderBiology(source: string) {
+  const sample = datasetForSource(source);
+  $('#image-title').textContent = sample?.biology?.title ?? sample?.name ?? 'Custom OME-Zarr image';
+  $('#image-description').textContent =
+    sample?.biology?.description ??
+    sample?.semantics ??
+    'Biological metadata has not been curated for this image. Consult its source study.';
+  const attribution = $('#image-attribution');
+  attribution.replaceChildren(
+    document.createTextNode(sample?.attribution ?? 'User-supplied source.'),
+  );
+  for (const [text, href] of [
+    ['Source study', sample?.biology?.studyUrl],
+    ['Publication', sample?.biology?.publicationUrl],
+  ]) {
+    if (!href) continue;
+    const link = document.createElement('a');
+    link.textContent = text!;
+    link.href = href;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    attribution.append(' · ', link);
+  }
+  $('#credit').textContent = sample
+    ? `${sample.attribution}. ${sample.semantics}.`
+    : 'Custom image: biological context and reuse terms must be checked with its provider.';
+  $('#image-plane').textContent = '';
+}
 function fill(s: Settings) {
+  renderBiology(s.source);
   for (const [key, value] of Object.entries(s)) {
     const element = document.getElementById(key) as HTMLInputElement;
     if (!element) continue;
@@ -165,6 +233,8 @@ button('close-settings').onclick = () => setSettingsOpen(false);
 button('about-toggle').onclick = () => $<HTMLDialogElement>('#about').showModal();
 button('close-about').onclick = () => $<HTMLDialogElement>('#about').close();
 fill(settings);
+if (!initialSettingsValid)
+  renderBiology(new URL(location.href).searchParams.get('source') ?? settings.source);
 try {
   const v = parseView(location.href);
   select('sort').value = v.sort;
@@ -181,10 +251,11 @@ try {
   initialSettingsValid = false;
   setStatus(`Invalid display state: ${e instanceof Error ? e.message : e}`, true);
 }
-select('preset').value =
-  settings.source === DEFAULT_SETTINGS.source
+select('preset').value = REFERENCE_POOL.some((s) => s.url === settings.source)
+  ? 'reference'
+  : settings.source === DEFAULT_SETTINGS.source
     ? 'labels'
-    : settings.source.includes('idr0033A')
+    : datasetForSource(settings.source)?.id === 'idr0033-BR00109990-C2-0'
       ? 'idr0033'
       : 'custom';
 select('segmentation').onchange = backendNote;
@@ -193,6 +264,10 @@ button('new-seed').onclick = () => {
 };
 select('preset').onchange = () => {
   const choice = select('preset').value;
+  if (choice === 'reference') {
+    void pullNewImage();
+    return;
+  }
   if (choice === 'custom') {
     input('source').focus();
     return;
@@ -210,10 +285,6 @@ select('preset').onchange = () => {
         }
       : { channels: [42] }),
   };
-  $('#credit').textContent =
-    choice === 'labels'
-      ? 'IDR0076, Ali et al., CC BY 4.0. Verified 2D tissue cell labels. Display override: channel 42, DNA1-191Ir.'
-      : 'Supplied IDR0033 Cell Painting image. Nuclei model, not whole-cell boundaries. Already 2D; Z and time indices are zero.';
   fill(settings);
   $('#metadata').hidden = true;
   $('#channel-legend').replaceChildren();
@@ -267,6 +338,9 @@ function busy(value: boolean) {
   }
 }
 function stop(terminate = true) {
+  discoveryAbort?.abort();
+  discoveryAbort = undefined;
+  morphem.resume('discovery');
   generation++;
   if (terminate) {
     worker?.terminate();
@@ -279,16 +353,68 @@ button('cancel').onclick = () => {
   clearResults();
   setStatus('Cancelled. No partial run was published.');
 };
-button('shuffle').onclick = () => {
-  button('new-seed').click();
-  start('run');
-};
+button('shuffle').onclick = () => void pullNewImage();
+async function pullNewImage(rememberCurrent = true) {
+  if (voiceNotes.isBusy) {
+    setStatus('Finish or cancel the voice task before loading another image.', true);
+    return;
+  }
+  stop();
+  if (rememberCurrent) archiveDiscovery.remember(settings.source);
+  if (!result) {
+    $('#image-title').textContent = 'Discovering a new BioImage Archive image…';
+    $('#image-description').textContent =
+      'Searching for a new fluorescence dataset with reader-compatible OME-Zarr metadata.';
+    $('#image-attribution').replaceChildren();
+    $('#image-plane').textContent = '';
+    $('#credit').textContent = 'Live BioImage Archive discovery';
+  }
+  morphem.pause('discovery');
+  const controller = new AbortController();
+  discoveryAbort = controller;
+  busy(true);
+  try {
+    const next = await archiveDiscovery.next(controller.signal, (message) => setStatus(message));
+    if (controller.signal.aborted || discoveryAbort !== controller) return;
+    registerDataset(next.sample);
+    settings = next.settings;
+    fill(settings);
+    select('preset').value = 'reference';
+    $('#metadata').hidden = true;
+    $('#channel-legend').replaceChildren();
+    discoveryAbort = undefined;
+    morphem.resume('discovery');
+    start('run');
+  } catch (error) {
+    if (controller.signal.aborted || discoveryAbort !== controller) return;
+    setStatus(
+      `Archive discovery unavailable: ${error instanceof Error ? error.message : String(error)} ${result ? 'Current image kept;' : 'No image loaded;'} no old dataset was substituted.`,
+      true,
+    );
+  } finally {
+    if (discoveryAbort === controller) {
+      discoveryAbort = undefined;
+      morphem.resume('discovery');
+      busy(false);
+    }
+  }
+}
 function displayMetadata(
   metadata: NgffMetadata,
   alignment: Alignment,
   dtype?: string,
   chunks?: number[],
+  showPlane = true,
 ) {
+  const objects =
+    settings.segmentation === 'model'
+      ? 'Exploratory predicted nuclei, not whole-cell boundaries.'
+      : settings.segmentation === 'classical'
+        ? 'Threshold-connected components, not validated cells.'
+        : 'Archive-supplied instance labels.';
+  if (showPlane)
+    $('#image-plane').textContent =
+      `Selected ${settings.channels.map((c) => metadata.channels[c]?.name ?? `channel ${c}`).join(', ')} · level ${settings.level} · Z ${settings.z} · time ${settings.t}. One plane, not a projection. ${objects}`;
   const dims = alignment.axes.map((name, i) => `${name} ${alignment.shape[i]}`).join(' · ');
   $('#metadata').textContent =
     `${dims}\n${metadata.levels.length} levels · NGFF ${metadata.version}${dtype ? ` · ${dtype}` : ''}${chunks ? `\nChunks: ${chunks.join(' × ')}` : ''}`;
@@ -337,6 +463,7 @@ function start(action: 'run' | 'inspect') {
   firstBatchMs = 0;
   readNetwork = undefined;
   settings = s;
+  renderBiology(s.source);
   history.replaceState(null, '', withView(settingsUrl(settings, location.href), readView()));
   busy(true);
   const id = ++generation;
@@ -369,7 +496,7 @@ function start(action: 'run' | 'inspect') {
       setStatus(`${p.stage} · ${p.cells} objects`);
       renderReadingProgress();
     } else if (type === 'metadata') {
-      displayMetadata(data.metadata, data.alignment, data.dtype, data.chunks);
+      displayMetadata(data.metadata, data.alignment, data.dtype, data.chunks, false);
       stop(false);
       setStatus('Metadata ready. Choose channels and a plane, then sample.');
     } else if (type === 'batch') {
@@ -394,7 +521,7 @@ function start(action: 'run' | 'inspect') {
       result!.timings.first_batch = firstBatchMs;
       result!.timings.browser_to_result = performance.now() - runStarted;
       stop(false);
-      finish(result!);
+      featurePreparation = finish(result!);
     } else if (type === 'error') {
       stop();
       clearResults();
@@ -415,6 +542,7 @@ function clearResults() {
   selected = undefined;
   $<HTMLDialogElement>('#inspector').close();
   result = undefined;
+  morphem.stop();
   visible = [];
   dbReady = false;
   setExports(false);
@@ -449,6 +577,18 @@ async function finish(run: RunResult) {
     if (result !== run) return;
     setStatus(e instanceof Error ? e.message : String(e), true);
   }
+  featurizeInBackground(run);
+}
+/** Publish each completed crop without replacing the base measurement table. */
+function featurizeInBackground(run: RunResult) {
+  if (result !== run || !dbReady || !run.cells.length) return;
+  worker?.terminate();
+  worker = undefined;
+  morphem.start(run.cells, async (cell, features) => {
+    const { publishCellFeatures } = await import('./database');
+    if (result !== run) return;
+    await publishCellFeatures(run.cells, cell.cell_id, features);
+  });
 }
 function applyFilters() {
   if (!result) return;
@@ -661,6 +801,46 @@ button('inspector-voice').onclick = () => {
   $<HTMLDialogElement>('#inspector').close();
   voiceNotes.open(context);
 };
+button('inspector-morphem').onclick = () =>
+  perform(async () => {
+    if (!selected) return;
+    const cell = selected;
+    const buttonElement = button('inspector-morphem');
+    buttonElement.disabled = true;
+    buttonElement.textContent = 'Embedding…';
+    try {
+      const snapshot = result;
+      await featurePreparation; // crops can be inspected before the export table finishes loading
+      if (snapshot !== result || selected !== cell) return;
+      const features = await morphem.waitFor(cell.cell_id);
+      if (snapshot !== result || selected !== cell) return;
+      // Display the first four values of each channel embedding plus summary
+      // stats in the object fields; the full vectors are downloadable as JSON.
+      const first = features.embeddings[0]!;
+      const manifest = {
+        cell_id: cell.cell_id,
+        model: features.modelId,
+        model_revision: features.modelRevision,
+        preprocessing: MORPHEM_PREPROCESSING,
+        channels: cell.channels,
+        feature_names: features.featureNames,
+        embeddings: features.embeddings.map((e) => Array.from(e, (v) => Number(v.toFixed(6)))),
+        crop_width: features.cropWidth,
+        crop_height: features.cropHeight,
+        milliseconds: Math.round(features.ms),
+      };
+      download(
+        new TextEncoder().encode(JSON.stringify(manifest, null, 2)),
+        `morphem-${cell.cell_id}.json`,
+      );
+      setStatus(
+        `MorphEm: ${features.embeddings.length} channel embedding${features.embeddings.length === 1 ? '' : 's'} × ${first.length} dims in ${Math.round(features.ms)} ms; JSON downloaded. First values: ${Array.from(first.slice(0, 4), (v) => v.toFixed(3)).join(', ')}…`,
+      );
+    } finally {
+      buttonElement.disabled = false;
+      buttonElement.textContent = 'MorphEm features';
+    }
+  });
 button('close').onclick = () => $<HTMLDialogElement>('#inspector').close();
 button('share').onclick = async () => {
   try {
@@ -685,7 +865,7 @@ for (const format of ['csv', 'parquet'] as const)
       const snapshot = result;
       const query = `SELECT * FROM cells WHERE cell_id IN (${visible.length ? visible.map((c) => `'${c.cell_id.replaceAll("'", "''")}'`).join(',') : "'__no_objects__'"})`;
       const { exportTable } = await import('./database');
-      const bytes = await exportTable(query, format);
+      const bytes = await exportTable(query, format, true);
       if (result !== snapshot) return;
       download(bytes, `musivarium.${format}`);
     });
@@ -760,4 +940,25 @@ button('mosaic-png').onclick = () =>
     await saveCanvas(canvas, 'musivarium-mosaic-preview.png');
   });
 
-if (initialSettingsValid) start('run');
+if (initialSettingsValid) {
+  const params = new URL(location.href).searchParams;
+  if (!params.has('source') && !params.has('reference')) {
+    void pullNewImage(false);
+  } else {
+    start('run');
+    const source = settings.source;
+    archiveDiscovery.remember(source);
+    if (archiveImageId(source) && !datasetForSource(source)) {
+      void describeArchiveSource(source, AbortSignal.timeout(15000))
+        .then((sample) => {
+          if (!sample || settings.source !== source) return;
+          registerDataset(sample);
+          renderBiology(source);
+          if (result) displayMetadata(result.metadata, result.alignment);
+        })
+        .catch(() => {
+          /* Keep explicit unknown provenance if the API is unavailable. */
+        });
+    }
+  }
+}

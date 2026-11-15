@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 
 // Protocol controls isolate editor/error behavior; real ASR is exercised by the
 // reproducible speech benchmark, not represented by this synthetic worker.
@@ -91,7 +91,7 @@ async function controls(
 }
 
 async function record(page: import('@playwright/test').Page) {
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
   const cell = await page.locator('.object-tile').first().getAttribute('data-id');
   await page.locator('.tile-voice-notes').first().click();

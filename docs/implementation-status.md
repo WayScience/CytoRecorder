@@ -11,13 +11,15 @@ The browser MVP and automated segmentation/export work are implemented. DuckDB-Z
 | M2 — DuckDB-Zarr extraction        | Implemented using the official community extension: bounded original-chunk downloads, complete decoder views, real SQL extraction, unchanged native values and source coordinates. Direct whole-store positional bounds remain unsupported upstream; they are not the production access path. | `docs/duckdb-zarr.md`, `tests/browser/duckdb-reader.spec.ts`, `tests/browser/duckdb-failure.spec.ts`; actual native-byte hashes, chunk keys, SQL and memory-file cleanup |
 | M3 — automated segmentation        | Complete: real pinned StarDist ONNX CPU/WASM inference plus Otsu/components baseline; no disguised fallback                                                                                                                                                                                   | `docs/segmentation.md`, `docs/segmentation-evaluation.md`; actual model execution in Chromium/Firefox production workers                                                 |
 | M4 — queryable results and exports | Complete: local DuckDB object table; filtered CSV/Parquet export/readback; native NumPy crop/label ZIP and PNG previews. The SQL editor has been removed from the demo UI.                                                                                                                    | `tests/browser/workflow.spec.ts`; self-hosted pinned Parquet extensions, no external software requests                                                                   |
-| Public deployment                  | Prepared, not published: static bundle and manual GitHub Pages workflow; repository Pages configuration and publication require maintainer action                                                                                                                                             | `.github/workflows/pages.yml`; actual static root and `/musivarium/` checks, not an assertion about hosted-origin CORS                                                   |
+| Public deployment                  | Published: `https://d33bs.github.io/musivarium/`; the **Publish Pages** workflow now runs on every push to `main` (manual dispatch also remains). A hosted-origin voice-notes run with synthetic speech and real Whisper inference passed after the change.                                   | `.github/workflows/pages.yml`; deployment history on `main`; hosted-origin Chromium verification with synthetic speech (not physical-microphone or human-speech testing) |
 
 The supplied NGFF 0.5 Cell Painting source is already 2D (`c,y,x`), so its only valid Z/time index is zero. It has no advertised masks. It is retained as the model/classical preset and has been exercised through the actual model pipeline; a bounded tile can legitimately return fewer objects than requested. The initial existing-label workflow instead uses the separately qualified IDR0076 image. Neither preset loads a volume or produces a projection.
 
 ## Automatic opening and focused layout
 
-The page automatically samples its default image or a valid shared URL. Choosing a supported preset starts a fresh load; manual control edits still use Sample objects. Settings start collapsed on desktop and mobile. Show settings/Hide settings and an in-panel Hide button provide keyboard-accessible access without reloading the mosaic. Shuffle, Cancel and sharing remain outside the panel, and source attribution stays visible. Invalid URL state does not silently trigger a default-data load.
+An unpinned page and **Pull random new image** now perform live BioImage Archive API discovery, excluding already-viewed image IDs/study accessions instead of recycling three examples. Per-tab session history survives reload. The search uses nuclear-fluorescence, human/mouse, single-plane and size/channel filters, then checks actual NGFF metadata and chunk budgets. API failure preserves the current mosaic and exports with an explicit error; cancellation prevents stale discovery responses from publishing. Exact source/settings URLs and explicit checked-example links stay reproducible. Settings remain collapsed until opened, and biology/license/file identity follow the newly selected image.
+
+Latest verification: `npm run check` passed **142 tests / 1 optional skip** and built production assets; **122 Chromium/Firefox tests** and all **four root/project-prefix production checks** passed. A separate real-network browser run loaded five different studies consecutively with actual StarDist inference and no page errors. This discovery work remains uncommitted and unpublished.
 
 ## Final verification
 
@@ -35,6 +37,18 @@ Executed against the working tree:
 - `npm run format:check`, `npm audit --audit-level=moderate`, `actionlint` and offline `zizmor` passed. No remote CI execution is claimed.
 
 Machine-readable static/live/benchmark evidence is in the local scratch directories `musivarium-static-validation`, `musivarium-validation`, and `musivarium-segmentation-evaluation-final`; scratch may be pruned. The checked-in fixtures, hash pins, independent oracle and repeatable scripts are the durable reproduction inputs.
+
+## Fixed BioImage Archive reference (2026-11-13)
+
+The app now opens on a pinned BIA OME-Zarr image instead of a runtime API search: **S-BIAD3204 / image `556d7ebf-98db-450a-a58d-23fe2379fefb`** (`RING_Rep2.czi`), confocal microscopy of heat-stressed human U2OS G3BP1/2-knockout cells expressing G3BP1-mCherry and a GFP-MKRN2 RING variant. Channels `mCher-T1`/`EGFP-T2`/`DAPI-T3`; default plane is pyramid level 2 (359 × 359) with exploratory StarDist nuclei from the DAPI channel; CC0. Organism, specimen, treatment, markers, accession, license and publication links render above the mosaic and update with the actual source group; custom images never inherit the reference biology.
+
+Executed against the working tree:
+
+- `npm run check`: TypeScript, **117 unit tests passed** (1 skipped) and production build passed.
+- `npm run test:browser`: all Chromium and Firefox suites passed, including new BIA default, biology-header, pixel-checksum and legacy-IDR regression tests (legacy suites now pin their original IDR settings explicitly via `idrUrl`).
+- `npm run test:static`: root and `/musivarium/` production cases passed in Chromium and Firefox, each also loading the BIA default from the static bundle (10 objects, no unexpected requests).
+- `uv run scripts/validate-bia-reference.py`: three complete 359 × 359 planes decoded independently with numcodecs 0.15.0; browser DuckDB-Zarr pixel SHA-256 hashes matched. Remote-image runs in Chromium 158 and Firefox 159 produced 10 crops each with zero page errors.
+- Discovery API requests, exact metadata URLs and scientific limits are recorded in `docs/bia-reference.md`; captured original bodies are pinned in `tests/browser/fixtures/bia3204/`.
 
 ## Grayscale display with green focus outlines
 
@@ -57,6 +71,18 @@ A three-repeat alternating original-byte replay with 80 ms/request controlled la
 Independent review found no confirmed security or data-fidelity blocker. The confirmed timing bug — successful HTTP attempts missing their start timestamp — is fixed. A regression now decodes actual original compressed IDR bytes behind a delayed transport and checks that successful download time is subtracted from `decode_copy_ms`.
 
 Parent-side integration also reproduced and fixed external JSON/Parquet autoload dependencies, overlapping DuckDB table writes, and stale asynchronous query/export updates. Metadata now enters through Arrow, Parquet is self-hosted and hash-pinned, table loads are serialized, and stale run/query results are discarded.
+
+## Automatic MorphEm extraction (2026-11-14)
+
+After sampling, a dedicated worker serially embeds native crops without changing the base measurement table. Each completed crop is published to a separate feature table; filtered CSV/Parquet exports join those values and explicit pending/ready status. Missing embeddings are null. Model ID, revision, preprocessing version and original channel order travel with the features. The inspector shares and prioritizes the same queue. Manual pause/retry, immediate worker termination for voice, and generation guards prevent resource contention and stale-image publication.
+
+Verification against this working tree:
+
+- `npm run check`: TypeScript, **134 tests passed / 1 optional test skipped**, and production build passed.
+- `npx playwright test --workers=4 --reporter=line`: **114 tests passed** across Chromium and Firefox. Includes real MorphEm inference, CSV/Parquet readback, model-worker termination/resumption on voice, null pending exports, inspector startup ordering, stale image protection and existing voice regressions.
+- `npm run test:static`: **four production cases passed** at `/` and `/musivarium/` in both browsers, including actual StarDist and 384-dimensional MorphEm inference, inspector JSON download and the voice model-failure/manual-note path. Zero JavaScript errors or unexpected external requests.
+- A clean scratch copy with no dependencies, generated models or vendor assets passed `npm ci`, cold-cache `npm run setup:assets`, and `npm run check`. MorphEm was reproduced from the real pinned upstream weights with the original **86,216,588-byte** size and SHA-256 `819132f2ef159e04e718bdf7c9e83a1e30f81cd305ca1ff299d74c5a6a9cec31`. Provisioning uses Python 3.10+ standard library only; the small weight-free recipe is included with the source. This was verified on macOS, not a remote Linux CI runner.
+- `npm run format:check` and `git diff --check` passed. These are local checks; current feature changes have not been committed, pushed or published. Physical-microphone testing is not claimed.
 
 ## Interpretation and remaining limits
 

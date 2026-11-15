@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures, source } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures, source } from './support/idr-fixtures';
 test('automatic loading is cancellable with settings collapsed on desktop and mobile', async ({
   page,
   context,
@@ -10,7 +10,7 @@ test('automatic loading is cancellable with settings collapsed on desktop and mo
     if (route.request().url() === source + '.zattrs') await gate;
     return false;
   });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#source')).toBeHidden();
   await expect(page.locator('#cancel')).toBeEnabled();
   await page.locator('#cancel').click();
@@ -24,7 +24,7 @@ test('automatic loading is cancellable with settings collapsed on desktop and mo
 });
 test('rejects invalid and unavailable sources, then can recover', async ({ page, context }) => {
   await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#result-count')).toHaveText('100 of 100 objects', { timeout: 15000 });
   await page.getByRole('button', { name: 'Show settings', exact: true }).click();
   await page.locator('#source').fill('http://127.0.0.1:5183/missing.zarr/');

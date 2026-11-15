@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 test('crop and inspector images use grayscale with green focused-instance contours', async ({
   page,
   context,
 }) => {
   await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#raw')).toBeEnabled({ timeout: 15000 });
   const inspectPixels = async (selector: string) =>
     page

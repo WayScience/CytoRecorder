@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 
 async function controlWorker(page: import('@playwright/test').Page, text: string) {
   await page.addInitScript(() => {
@@ -75,7 +75,7 @@ test('a real decoder-loop transcript is flagged for review before saving, a norm
     'The third one was the third one. '.repeat(74) +
     'Plum bicycle marks the final crossing.';
   await controlWorker(page, looped);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await page.locator('.tile-voice-notes').first().click();
   await page.locator('#voice-record').click();
   // Wait for the recording phase transition (elapsed resets to 0.0 in the same

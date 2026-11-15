@@ -44,6 +44,7 @@ export class VoiceNotesPanel {
     private readonly options: {
       prepareRecording: () => void;
       onChange: (notes: VoiceNote[]) => void;
+      onClose?: () => void;
     },
   ) {
     host.className = 'voice-notes-box';
@@ -163,6 +164,7 @@ export class VoiceNotesPanel {
     this.cancel(false);
     this.resetDraft();
     this.dialog.close();
+    this.options.onClose?.();
   }
 
   private lockContext(): void {

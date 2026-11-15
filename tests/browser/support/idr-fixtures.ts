@@ -3,6 +3,16 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { BrowserContext, Route } from '@playwright/test';
 
+import { DEFAULT_SETTINGS, settingsUrl } from '../../../src/core';
+
+/** Legacy-reader regressions should not depend on the app's current reference image. */
+export function idrUrl(path = '/') {
+  const url = new URL(settingsUrl(DEFAULT_SETTINGS, 'http://127.0.0.1:5183/'));
+  const requested = new URL(path, url);
+  requested.searchParams.forEach((value, key) => url.searchParams.set(key, value));
+  return requested.pathname + url.search + requested.hash;
+}
+
 export const source = 'https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0076A/10501752.zarr/';
 const directory = new URL('../fixtures/idr0076/', import.meta.url);
 export const fixtureManifest = JSON.parse(
@@ -23,17 +33,26 @@ export async function installIdrFixtures(
   context: BrowserContext,
   override?: (route: Route) => Promise<boolean>,
 ) {
+  return installImageFixtures(context, directory, fixtureManifest, override);
+}
+
+export async function installImageFixtures(
+  context: BrowserContext,
+  directory: URL,
+  manifest: typeof fixtureManifest,
+  override?: (route: Route) => Promise<boolean>,
+) {
   const requests: string[] = [],
     unexpected: string[] = [],
     blockedSoftwareRequests: string[] = [];
   const entries = new Map(
-    fixtureManifest.entries.map((entry) => {
+    manifest.entries.map((entry) => {
       const body = readFileSync(fileURLToPath(new URL(entry.file, directory)));
       if (
         body.length !== entry.bytes ||
         createHash('sha256').update(body).digest('hex') !== entry.sha256
       )
-        throw Error(`Corrupt IDR fixture: ${entry.key}`);
+        throw Error(`Corrupt original image fixture: ${entry.key}`);
       return [entry.url, { ...entry, body }] as const;
     }),
   );

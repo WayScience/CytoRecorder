@@ -1,0 +1,100 @@
+{
+  "multiscales" : [ {
+    "metadata" : {
+      "method" : "loci.common.image.SimpleImageScaler",
+      "version" : "Bio-Formats 7.1.0"
+    },
+    "axes" : [ {
+      "name" : "t",
+      "type" : "time"
+    }, {
+      "name" : "c",
+      "type" : "channel"
+    }, {
+      "name" : "z",
+      "type" : "space"
+    }, {
+      "unit" : "micrometer",
+      "name" : "y",
+      "type" : "space"
+    }, {
+      "unit" : "micrometer",
+      "name" : "x",
+      "type" : "space"
+    } ],
+    "name" : "A1 P1",
+    "datasets" : [ {
+      "path" : "0",
+      "coordinateTransformations" : [ {
+        "scale" : [ 1.0, 1.0, 1.0, 0.07057251107355492, 0.07057251107355492 ],
+        "type" : "scale"
+      } ]
+    }, {
+      "path" : "1",
+      "coordinateTransformations" : [ {
+        "scale" : [ 1.0, 1.0, 1.0, 0.14114502214710983, 0.14114502214710983 ],
+        "type" : "scale"
+      } ]
+    }, {
+      "path" : "2",
+      "coordinateTransformations" : [ {
+        "scale" : [ 1.0, 1.0, 1.0, 0.28229004429421967, 0.28229004429421967 ],
+        "type" : "scale"
+      } ]
+    }, {
+      "path" : "3",
+      "coordinateTransformations" : [ {
+        "scale" : [ 1.0, 1.0, 1.0, 0.5645800885884393, 0.5645800885884393 ],
+        "type" : "scale"
+      } ]
+    } ],
+    "version" : "0.4"
+  } ],
+  "omero" : {
+    "channels" : [ {
+      "color" : "FF0900",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "mCher-T1",
+      "window" : {
+        "min" : 0.0,
+        "max" : 255.0,
+        "start" : 0.0,
+        "end" : 255.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    }, {
+      "color" : "00FF5B",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "EGFP-T2",
+      "window" : {
+        "min" : 0.0,
+        "max" : 62.0,
+        "start" : 0.0,
+        "end" : 62.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    }, {
+      "color" : "00A0FF",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "DAPI-T3",
+      "window" : {
+        "min" : 0.0,
+        "max" : 28.0,
+        "start" : 0.0,
+        "end" : 28.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    } ],
+    "rdefs" : {
+      "defaultT" : 0,
+      "model" : "color",
+      "defaultZ" : 0
+    }
+  }
+}

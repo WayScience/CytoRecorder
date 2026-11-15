@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { installIdrFixtures, source } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures, source } from './support/idr-fixtures';
 test('the demo reads original image and labels through DuckDB-Zarr, without extra channels', async ({
   page,
   context,
@@ -12,7 +12,7 @@ test('the demo reads original image and labels through DuckDB-Zarr, without extr
   page.on('request', (r) => {
     if (r.url().includes('zarr.duckdb_extension.wasm')) software.push(r.url());
   });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#raw')).toBeEnabled({ timeout: 45000 });
   const run = JSON.parse((await page.locator('#run-details').textContent())!);
   expect(run.settings.reader).toBe('duckdb-zarr');
@@ -49,7 +49,7 @@ test('DuckDB native-byte hashes and registered chunk readbacks match the indepen
   const manifest = JSON.parse(
     readFileSync(new URL('../fixtures/idr0076-10501752/manifest.json', import.meta.url), 'utf8'),
   );
-  await page.goto('/?count=100000');
+  await page.goto(idrUrl('/?count=100000'));
   const result = await page.evaluate(
     async ({ source, region }) => {
       const path = '/src/sources/duckdb-zarr.ts',

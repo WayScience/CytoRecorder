@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
-import { fixtureManifest } from './support/idr-fixtures';
+import { idrUrl, fixtureManifest } from './support/idr-fixtures';
 import { installIdrFixtures } from './support/idr-fixtures';
 test('the selected instance is outlined by default in each crop', async ({ page, context }) => {
   await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#result-count')).toHaveText('100 of 100 objects', { timeout: 15000 });
   await page.getByRole('button', { name: 'Show settings', exact: true }).click();
   await expect(page.locator('#overlay')).toBeChecked();
@@ -62,7 +62,9 @@ test('a streamed original image advances the progress bar before a tile finishes
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
   const port = (server.address() as { port: number }).port;
   try {
-    await page.goto('/?source=' + encodeURIComponent(`http://127.0.0.1:${port}/image.zarr/`));
+    await page.goto(
+      idrUrl('/?source=' + encodeURIComponent(`http://127.0.0.1:${port}/image.zarr/`)),
+    );
     await seen;
     await expect(page.locator('#read-summary')).toContainText('received');
     await expect

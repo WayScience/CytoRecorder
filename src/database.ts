@@ -3,6 +3,8 @@ import { tableFromJSON } from 'apache-arrow';
 import { cellRow, type Cell } from './pipeline';
 import { validateSelect } from './exports';
 import runtimeAssets from '../scripts/runtime-assets.json';
+import { MORPHEM_MODEL_INFO, MORPHEM_PREPROCESSING } from './features/config';
+import type { MorphEmFeatureResult } from './features/morphem';
 // Both dev modules (src/) and production bundles (assets/) are one level below
 // the app root. Unlike location.href, this also works inside the app worker.
 const vendor = new URL('../vendor/', import.meta.url).href.replace(/\/?$/, '/');
@@ -42,14 +44,31 @@ async function openDatabase() {
   }
 }
 let generation = 0;
-let loadQueue: Promise<unknown> = Promise.resolve();
+let currentCells: Cell[] | undefined;
+let operationQueue: Promise<unknown> = Promise.resolve();
+/** Serialize the complete operation, not only its first query. */
+function enqueue<T>(work: () => Promise<T>): Promise<T> {
+  const next = operationQueue.catch(() => {}).then(work);
+  operationQueue = next;
+  return next;
+}
+const quote = (value: string) => "'" + value.replaceAll("'", "''") + "'";
+function featureNames(channels: number): string[] {
+  return Array.from({ length: channels }, (_, c) =>
+    Array.from(
+      { length: MORPHEM_MODEL_INFO.embedDim },
+      (_, i) => `MorphEm_Feature${i}_Channel${c}`,
+    ),
+  ).flat();
+}
 export function loadCells(cells: Cell[]): Promise<boolean> {
   const id = ++generation;
-  const load = loadQueue
-    .catch(() => {})
-    .then(async () => {
-      const { connection } = await database();
-      if (id !== generation) return false;
+  currentCells = cells;
+  return enqueue(async () => {
+    const { connection } = await database();
+    if (id !== generation) return false;
+    await connection.query('BEGIN TRANSACTION');
+    try {
       await connection.query('DROP TABLE IF EXISTS cells');
       if (cells.length)
         await connection.insertArrowTable(tableFromJSON(cells.map(cellRow)), {
@@ -60,26 +79,68 @@ export function loadCells(cells: Cell[]): Promise<boolean> {
         await connection.query(
           'CREATE TABLE cells(cell_id VARCHAR, area INTEGER, cx DOUBLE, cy DOUBLE)',
         );
+      await connection.query('DROP TABLE IF EXISTS morphem_features');
+      const names = featureNames(cells.reduce((n, cell) => Math.max(n, cell.channels.length), 0));
+      await connection.query(`CREATE TABLE morphem_features AS SELECT cell_id, 'pending' AS morphem_status,
+        CAST(NULL AS VARCHAR) AS morphem_model_id, CAST(NULL AS VARCHAR) AS morphem_model_revision,
+        CAST(NULL AS VARCHAR) AS morphem_preprocessing, CAST(NULL AS VARCHAR) AS morphem_channels
+        ${names.map((name) => `, CAST(NULL AS FLOAT) AS "${name}"`).join('')} FROM cells`);
+      for (const cell of cells)
+        await connection.query(
+          `UPDATE morphem_features SET morphem_channels=${quote(cell.channels.join(','))} WHERE cell_id=${quote(cell.cell_id)}`,
+        );
+      await connection.query('COMMIT');
       return id === generation;
-    });
-  loadQueue = load;
-  return load;
+    } catch (error) {
+      await connection.query('ROLLBACK');
+      throw error;
+    }
+  });
 }
-export async function queryCells(sql: string) {
-  const { connection } = await database(),
-    table = await connection.query(
+/** Publish only into the exact run that supplied these native crops. */
+export function publishCellFeatures(
+  cells: Cell[],
+  cellId: string,
+  features: MorphEmFeatureResult,
+): Promise<boolean> {
+  return enqueue(async () => {
+    if (currentCells !== cells) return false;
+    const cell = cells.find((cell) => cell.cell_id === cellId);
+    if (!cell) throw Error('Unknown feature cell');
+    if (
+      features.embeddings.length !== cell.channels.length ||
+      features.embeddings.some(
+        (e) => e.length !== MORPHEM_MODEL_INFO.embedDim || e.some((v) => !Number.isFinite(v)),
+      )
+    )
+      throw Error('Invalid MorphEm feature shape or non-finite embedding');
+    const values = features.embeddings.flatMap((e) => Array.from(e));
+    const names = featureNames(cell.channels.length);
+    const { connection } = await database();
+    await connection.query(`UPDATE morphem_features SET morphem_status='ready',
+      morphem_model_id=${quote(features.modelId)}, morphem_model_revision=${quote(features.modelRevision)},
+      morphem_preprocessing=${quote(MORPHEM_PREPROCESSING)}
+      ${names.map((name, i) => `, "${name}"=${values[i]}`).join('')} WHERE cell_id=${quote(cellId)}`);
+    return currentCells === cells;
+  });
+}
+export function queryCells(sql: string) {
+  return enqueue(async () => {
+    const { connection } = await database();
+    const table = await connection.query(
       `SELECT * FROM (${validateSelect(sql)}) AS query_result LIMIT 10001`,
-    ),
-    rows = table
+    );
+    const rows = table
       .toArray()
       .map((row) =>
         JSON.parse(JSON.stringify(row, (_k, v) => (typeof v === 'bigint' ? Number(v) : v))),
       );
-  if (rows.length > 10000) throw Error('Query result exceeds the 10,000-row limit');
-  return {
-    rows: rows as Record<string, unknown>[],
-    columns: table.schema.fields.map((f) => f.name),
-  };
+    if (rows.length > 10000) throw Error('Query result exceeds the 10,000-row limit');
+    return {
+      rows: rows as Record<string, unknown>[],
+      columns: table.schema.fields.map((f) => f.name),
+    };
+  });
 }
 let parquetPromise: Promise<void> | undefined;
 let zarrPromise: Promise<void> | undefined;
@@ -123,15 +184,27 @@ async function ensureParquet() {
     );
   }));
 }
-export async function exportTable(sql: string, format: 'csv' | 'parquet'): Promise<Uint8Array> {
-  const { db, connection } = await database(),
-    query = validateSelect(sql),
-    name = `musivarium.${format}`;
-  if (format === 'parquet') await ensureParquet();
-  await connection.query(
-    `COPY (${query}) TO '${name}' (FORMAT ${format.toUpperCase()}${format === 'csv' ? ', HEADER TRUE' : ''})`,
-  );
-  const bytes = await db.copyFileToBuffer(name);
-  await db.dropFile(name);
-  return bytes;
+let exportId = 0;
+export function exportTable(
+  sql: string,
+  format: 'csv' | 'parquet',
+  includeFeatures = false,
+): Promise<Uint8Array> {
+  return enqueue(async () => {
+    const { db, connection } = await database();
+    const selected = validateSelect(sql);
+    const query = includeFeatures
+      ? `SELECT selected.*, features.* EXCLUDE (cell_id) FROM (${selected}) selected LEFT JOIN morphem_features features USING (cell_id)`
+      : selected;
+    const name = `musivarium-${++exportId}.${format}`;
+    if (format === 'parquet') await ensureParquet();
+    try {
+      await connection.query(
+        `COPY (${query}) TO '${name}' (FORMAT ${format.toUpperCase()}${format === 'csv' ? ', HEADER TRUE' : ''})`,
+      );
+      return await db.copyFileToBuffer(name);
+    } finally {
+      await db.dropFile(name).catch(() => {});
+    }
+  });
 }

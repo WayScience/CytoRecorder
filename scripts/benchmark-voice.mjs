@@ -606,7 +606,8 @@ try {
   async function prepareImageAndRelease(label, reload = false) {
     phase = label;
     if (reload) await page.reload();
-    else await page.goto(origin);
+    // Keep the established contention workload pinned to the original IDR fixture.
+    else await page.goto(origin + '?source=' + encodeURIComponent(manifest.attribution.source));
     await page.waitForFunction(() => !document.querySelector('#csv')?.disabled, undefined, {
       timeout: 60000,
     });

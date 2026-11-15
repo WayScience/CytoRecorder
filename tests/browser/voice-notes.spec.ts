@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 test('per-tile manual notes preserve context, persist, edit, export and delete without ASR downloads', async ({
@@ -14,7 +14,7 @@ test('per-tile manual notes preserve context, persist, edit, export and delete w
   page.on('request', (request) => {
     if (/huggingface|whisper|asr.worker/.test(request.url())) asrRequests.push(request.url());
   });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
   const cellId = await page.locator('#mosaic .object-tile').first().getAttribute('data-id');
   await page.locator('.tile-voice-notes').first().click();
@@ -79,7 +79,7 @@ test('manual draft works with denied microphone and blocked IndexedDB; export re
     });
     Object.defineProperty(globalThis, 'indexedDB', { get: () => undefined });
   });
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
   await page.locator('#voice-all').click();
   await page.locator('#voice-record').click();

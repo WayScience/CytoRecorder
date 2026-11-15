@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { installIdrFixtures } from './support/idr-fixtures';
+import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
 
 test('mobile voice box fits viewport; keyboard opening and Escape preserve an unsaved draft', async ({
   page,
@@ -7,7 +7,7 @@ test('mobile voice box fits viewport; keyboard opening and Escape preserve an un
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await installIdrFixtures(context);
-  await page.goto('/');
+  await page.goto(idrUrl('/'));
   await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
   await page.locator('.tile-voice-notes').first().focus();
   await page.keyboard.press('Enter');

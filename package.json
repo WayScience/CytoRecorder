@@ -17,6 +17,7 @@
     "validate:live": "node scripts/validate-live.mjs",
     "test:static": "node scripts/smoke-static.mjs",
     "validate:reference": "uv run scripts/validate-reference.py",
+    "setup:morphem": "node scripts/setup-morphem.mjs",
     "format": "prettier --write src tests scripts docs public/datasets.json *.json *.ts *.html *.md .github/workflows",
     "format:check": "prettier --check src tests scripts docs public/datasets.json *.json *.ts *.html *.md .github/workflows",
     "check": "npm run typecheck && npm test && npm run build"

@@ -7,17 +7,21 @@ import { createHash } from 'node:crypto';
 const root = resolve('dist'),
   evidence = resolve(process.env.EVIDENCE_DIR || '.cache/musivarium-static-validation');
 await mkdir(evidence, { recursive: true });
-const fixtureRoot = resolve('tests/browser/fixtures/idr0076'),
-  manifest = JSON.parse(await readFile(join(fixtureRoot, 'manifest.json'), 'utf8')),
-  fixtures = new Map();
-for (const entry of manifest.entries) {
-  const body = await readFile(join(fixtureRoot, entry.file));
-  if (
-    body.length !== entry.bytes ||
-    createHash('sha256').update(body).digest('hex') !== entry.sha256
-  )
-    throw Error('Corrupt original fixture');
-  fixtures.set(entry.url, { ...entry, body });
+const fixtures = new Map(),
+  fixtureManifests = new Map();
+for (const name of ['idr0076', 'bia3204', 'bia-search']) {
+  const fixtureRoot = resolve('tests/browser/fixtures', name);
+  const manifest = JSON.parse(await readFile(join(fixtureRoot, 'manifest.json'), 'utf8'));
+  fixtureManifests.set(name, manifest);
+  for (const entry of manifest.entries) {
+    const body = await readFile(join(fixtureRoot, entry.file));
+    if (
+      body.length !== entry.bytes ||
+      createHash('sha256').update(body).digest('hex') !== entry.sha256
+    )
+      throw Error('Corrupt original fixture');
+    fixtures.set(entry.url, { ...entry, body });
+  }
 }
 const mime = {
   '.html': 'text/html',
@@ -121,6 +125,15 @@ for (const prefix of ['', '/musivarium']) {
             voiceModelRequests.push({ url, method: route.request().method() });
             return route.abort('blockedbyclient'); // Explicit model-download-failure control, not fake ASR.
           }
+          if (url.startsWith('https://beta.bioimagearchive.org/search/v1/search/fts/image?')) {
+            const body = await readFile('tests/browser/fixtures/bia-search/page-1.json');
+            return route.fulfill({
+              status: 200,
+              contentType: 'application/json',
+              body,
+              headers: { 'Access-Control-Allow-Origin': '*' },
+            });
+          }
           const fixture = fixtures.get(url);
           if (!fixture) {
             unexpected.push(url);
@@ -132,7 +145,11 @@ for (const prefix of ['', '/musivarium']) {
             headers: { 'Content-Type': fixture.contentType, 'Access-Control-Allow-Origin': '*' },
           });
         });
-        await page.goto(base);
+        await page.goto(
+          base +
+            '?source=' +
+            encodeURIComponent(fixtureManifests.get('idr0076').attribution.source),
+        );
         if (!(await page.locator('#source').isHidden()))
           throw Error('Settings did not start collapsed');
         await page.waitForFunction(() => !document.querySelector('#raw')?.disabled, undefined, {
@@ -177,6 +194,29 @@ for (const prefix of ['', '/musivarium']) {
           throw Error('No real weight request');
         if (model.stats.objects.some((o) => o.url.includes('/labels/')))
           throw Error('Model path unexpectedly fetched labels');
+        // The production MorphEm worker must resolve model + vendor assets under
+        // both root and GitHub Pages prefix hosting, not just on the dev server.
+        await page.waitForFunction(
+          () =>
+            document
+              .querySelector('#morphem-status')
+              ?.textContent.includes('MorphEm ready: 3 objects embedded'),
+          undefined,
+          { timeout: 60000 },
+        );
+        await page.locator('.object-tile').first().click();
+        const featureDownload = page.waitForEvent('download', { timeout: 15000 });
+        await page.locator('#inspector-morphem').click();
+        const featureFile = join(evidence, `${name}-${prefix ? 'prefix' : 'root'}-morphem.json`);
+        await (await featureDownload).saveAs(featureFile);
+        const features = JSON.parse(await readFile(featureFile, 'utf8'));
+        if (
+          features.embeddings.length !== 1 ||
+          features.embeddings[0].length !== 384 ||
+          features.embeddings[0].some((v) => !Number.isFinite(v))
+        )
+          throw Error('Invalid production MorphEm embedding');
+        await page.locator('#close').click();
         if (voiceAssets.length || voiceModelRequests.length)
           throw Error('ASR loaded at page startup');
         const voiceCell = await page.locator('.object-tile').first().getAttribute('data-id');
@@ -242,15 +282,63 @@ for (const prefix of ['', '/musivarium']) {
           path: join(evidence, `${name}-${prefix ? 'prefix' : 'root'}-voice-notes.png`),
           fullPage: true,
         });
+        // Explicit BIA example links stay reproducible in root/prefix artifacts.
+        await page.goto(base + '?reference=bia3204-ring-rep2');
+        await page.waitForFunction(
+          () => document.querySelector('#csv')?.disabled === false,
+          undefined,
+          { timeout: 45000 },
+        );
+        const reference = JSON.parse(await page.locator('#run-details').textContent());
+        if (
+          reference.cell_count !== 10 ||
+          reference.settings.source !== fixtureManifests.get('bia3204').source
+        )
+          throw Error('Pinned BIA reference did not load');
+        if (!(await page.locator('#image-title').textContent()).includes('Human U2OS'))
+          throw Error('Biological context missing from the reference');
+        await page.screenshot({
+          path: join(evidence, `${name}-${prefix ? 'prefix' : 'root'}-bia.png`),
+          fullPage: true,
+        });
+        // Discovery also runs in the built project-prefix bundle. Search responses
+        // are recorded API bodies; metadata and pixels remain original NGFF bytes.
+        await page.evaluate(() => {
+          crypto.getRandomValues = (array) => array.fill(0);
+        });
+        await page.locator('#shuffle').click();
+        await page.waitForFunction(
+          () =>
+            !document.querySelector('#csv').disabled &&
+            new URL(location.href).searchParams.get('source')?.includes('/S-BIAD2258/'),
+          undefined,
+          { timeout: 60000 },
+        );
+        await page.waitForFunction(
+          () => document.querySelector('#morphem-status')?.textContent.includes('MorphEm ready:'),
+          undefined,
+          { timeout: 60000 },
+        );
+        const discoveredSource = new URL(page.url()).searchParams.get('source');
+        if (
+          !(await page.locator('#image-description').textContent()).includes(
+            'marine plankton environmental sample',
+          )
+        )
+          throw Error('Discovered source is missing actual biological provenance');
         if (errors.length || unexpected.length) throw Error(JSON.stringify({ errors, unexpected }));
         const report = {
           prefix: prefix || '/',
           browser: name,
           cells: native.cell_count,
+          referenceCells: reference.cell_count,
+          referenceSource: reference.settings.source,
           source: native.settings.source,
           readBytes: native.stats.bytes,
           parquetBytes: data.length,
           modelObjects: model.cell_count,
+          morphemDimensions: features.embeddings[0].length,
+          discoveredSource,
           modelMilliseconds: model.timings.segmentation,
           softwareRequests: software.length,
           voiceWorkerAssets: voiceAssets,
