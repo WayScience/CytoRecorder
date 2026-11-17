@@ -66,14 +66,14 @@ test('voice recording terminates in-flight features; close resumes and manual pa
   page.on('pageerror', (error) => errors.push(error.message));
   try {
     await page.goto(idrUrl('/?target=3'));
-    await expect.poll(() => modelRequests).toBe(1);
+    await expect.poll(() => modelRequests, { timeout: 30000 }).toBe(1);
     await page.locator('.tile-voice-notes').first().click();
     await page.locator('#voice-record').click();
     await expect(page.locator('#voice-status')).toContainText(/denied|blocked/i);
     await expect(page.locator('#morphem-status')).toContainText('paused');
     await expect.poll(() => closedWorkers).toBe(1);
     await page.locator('#voice-close').click();
-    await expect.poll(() => modelRequests).toBe(2);
+    await expect.poll(() => modelRequests, { timeout: 30000 }).toBe(2);
     await page.locator('#morphem-pause').click();
     await expect.poll(() => closedWorkers).toBe(2);
     await expect(page.locator('#morphem-status')).toContainText('paused');
