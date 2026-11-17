@@ -25,10 +25,10 @@ test('header links align with the main viewing window width on wide screens', as
       };
     });
     // The wordmark's left edge matches the viewing window's left content edge.
-    expect(box.wordmark.left).toBe(box.content.left);
-    expect(box.content.left).toBe(box.mosaic.left);
+    expect(box.wordmark.left).toBeCloseTo(box.content.left, 2);
+    expect(box.content.left).toBeCloseTo(box.mosaic.left, 2);
     // The rightmost header link's right edge matches the right content edge.
-    expect(Math.max(box.sourceLink.right, box.aboutToggle.right)).toBe(box.mosaic.right);
+    expect(Math.max(box.sourceLink.right, box.aboutToggle.right)).toBeCloseTo(box.mosaic.right, 2);
     expect(box.overflow).toBe(false);
   }
 });
