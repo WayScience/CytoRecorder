@@ -26,7 +26,8 @@ test('a pending local delete serializes editor mutations and cannot be closed mi
   });
   page.once('dialog', (dialog) => dialog.accept());
   await page.locator('.voice-delete').click();
-  await expect(page.locator('#voice-new')).toBeDisabled();
+  await expect(page.locator('#voice-new')).not.toBeAttached();
+  await expect(page.locator('#voice-record')).toBeDisabled();
   await expect(page.locator('#voice-save')).toBeDisabled();
   await page.locator('#voice-close').click();
   await expect(page.locator('#voice-notes-dialog')).toBeVisible();
@@ -35,5 +36,5 @@ test('a pending local delete serializes editor mutations and cannot be closed mi
     (globalThis as unknown as { releaseVoiceDelete(): void }).releaseVoiceDelete(),
   );
   await expect(page.locator('.voice-saved-note')).toHaveCount(0);
-  await expect(page.locator('#voice-new')).toBeEnabled();
+  await expect(page.locator('#voice-record')).toBeEnabled();
 });

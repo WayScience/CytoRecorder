@@ -36,8 +36,8 @@ async function main() {
 
 async function audit() {
   const root = resolve(
-    process.env.MUSIVARIUM_AUDIT_DIR ??
-      join(homedir(), '.hermes', 'cache', 'scratch', 'musivarium-duckdb-community-audit'),
+    process.env.CYTORECORDER_AUDIT_DIR ??
+      join(homedir(), '.hermes', 'cache', 'scratch', 'cytorecorder-duckdb-community-audit'),
   );
   await mkdir(root, { recursive: true });
   const response = await fetch(PIN.url, { signal: AbortSignal.timeout(30_000) });

@@ -157,7 +157,7 @@ test('failed model leaves crop exports and manual notes functional; retry is ava
   await page.locator('#voice-close').click();
   await expect(page.locator('#csv')).toBeEnabled();
   await page.locator('.object-tile').first().click();
-  await expect(page.locator('#inspector')).toBeVisible();
+  await expect(page.locator('#voice-notes-dialog')).toBeVisible();
 });
 
 test('cancel during local inference terminates worker and allows a fresh note', async ({
@@ -191,7 +191,7 @@ for (const mode of ['error', 'empty'] as const) {
     await record(page);
     await expect(page.locator('#voice-retry')).toBeVisible();
     await expect(page.locator('#voice-text')).toHaveValue('');
-    for (const button of ['voice-close', 'voice-new', 'voice-record']) {
+    for (const button of ['voice-close', 'voice-record']) {
       page.once('dialog', (dialog) => dialog.dismiss());
       await page.locator('#' + button).click();
       await expect(page.locator('#voice-notes-dialog')).toBeVisible();

@@ -130,7 +130,7 @@ export class VoiceRecorder {
         abort,
       ]);
       this.check(session);
-      session.node = new AudioWorkletNode(session.context, 'musivarium-voice-pcm', {
+      session.node = new AudioWorkletNode(session.context, 'cytorecorder-voice-pcm', {
         numberOfInputs: 1,
         numberOfOutputs: 1,
         outputChannelCount: [1],

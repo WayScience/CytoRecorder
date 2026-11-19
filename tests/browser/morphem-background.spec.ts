@@ -144,7 +144,7 @@ test('MorphEm features are computed in the background after sampling and reach t
   // The inspector now serves the cached embedding: the button completes
   // instantly and reports the same manifest without recomputation.
   await page.locator('#mosaic .object-tile').first().click();
-  await expect(page.locator('#inspector')).toBeVisible();
+  await expect(page.locator('#voice-notes-dialog')).toBeVisible();
   const manifestPromise = page.waitForEvent('download', { timeout: 30000 });
   await page.locator('#inspector-morphem').click();
   const manifestDownload = await manifestPromise;

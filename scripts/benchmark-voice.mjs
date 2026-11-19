@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = new Set(process.argv.slice(2));
 const out = resolve(
   process.env.VOICE_EVIDENCE_DIR ||
-    join(os.homedir(), '.hermes/cache/scratch/musivarium-voice-evaluation'),
+    join(os.homedir(), '.hermes/cache/scratch/cytorecorder-voice-evaluation'),
 );
 const referencePath = join(root, 'scripts/voice-reference.json');
 const reference = JSON.parse(await readFile(referencePath, 'utf8'));

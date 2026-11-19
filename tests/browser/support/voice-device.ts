@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 /** Generated 440-Hz device-simulation fixture, NOT a real human microphone test. */
 export function fakeMicrophoneWav(): string {
-  const directory = mkdtempSync(join(process.env.TMPDIR || tmpdir(), 'musivarium-voice-'));
+  const directory = mkdtempSync(join(process.env.TMPDIR || tmpdir(), 'cytorecorder-voice-'));
   const rate = 48000;
   const frames = rate * 8;
   const wav = Buffer.alloc(44 + frames * 2);

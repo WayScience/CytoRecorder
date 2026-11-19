@@ -91,7 +91,7 @@ export function provenance(result: RunResult) {
   return {
     ...run,
     cell_count: cells.length,
-    software: 'musivarium 0.1.0',
+    software: 'cytorecorder 0.1.0',
     normalization: '1st–99.5th percentile per crop per channel for display only',
     display_palette: 'grayscale',
     segmentation_outline_color: '#00FF00',

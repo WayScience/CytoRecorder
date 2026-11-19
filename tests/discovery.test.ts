@@ -44,12 +44,16 @@ afterEach(() => {
 });
 
 describe('live archive discovery', () => {
-  it('preserves actual image identity, biological context and license from the API', () => {
+  it('preserves actual image identity, imaging method and license, but excludes organism/biological-context text', () => {
     const sample = datasetFromRecord(original);
     expect(sample.accession).toBe('S-BIAD2258');
     expect(sample.imageId).toBe(original.uuid);
-    expect(sample.biology?.description).toContain('marine plankton environmental sample');
+    expect(sample.biology?.description).toContain('Imaging: bright-field microscopy');
+    expect(sample.biology?.description).toContain('Archive specimen: Plankton');
     expect(sample.attribution).toContain('CC BY 4.0');
+    expect(sample.biology?.description).not.toContain('Organism');
+    expect(sample.biology?.description).not.toContain('marine plankton environmental sample');
+    expect(sample.biology?.description).not.toContain('Biological context');
     expect(sample.biology?.description).not.toContain('U2OS');
     expect(sample.biology?.studyUrl).toContain('S-BIAD2258');
   });

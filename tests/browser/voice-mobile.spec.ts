@@ -9,10 +9,11 @@ test('mobile voice box fits viewport; keyboard opening and Escape preserve an un
   await installIdrFixtures(context);
   await page.goto(idrUrl('/'));
   await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
+  const cellId = await page.locator('.object-tile').first().getAttribute('data-id');
   await page.locator('.tile-voice-notes').first().focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#voice-notes-dialog')).toBeVisible();
-  await expect(page.locator('#voice-context')).not.toContainText('Unattached');
+  await expect(page.locator('#object-title')).toHaveText(cellId!);
   await page.locator('#voice-text').fill('Unsaved microscopy note.');
   const bounds = await page.locator('#voice-notes-dialog').boundingBox();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);

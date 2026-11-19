@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-const outDir = await mkdtemp(join(process.env.TMPDIR || tmpdir(), 'musivarium-voice-build-'));
+const outDir = await mkdtemp(join(process.env.TMPDIR || tmpdir(), 'cytorecorder-voice-build-'));
 const base = '/musivarium/';
 await build({
   configFile: false,

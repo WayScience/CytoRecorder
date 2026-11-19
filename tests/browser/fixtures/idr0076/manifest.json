@@ -139,6 +139,28 @@
       "contentType": "application/octet-stream",
       "capturedUtc": "2026-11-12T03:57:05.218032+00:00",
       "etag": "\"adf0240b401915436e9e52c34ba05512\""
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0076A/10501752.zarr/3/.zarray",
+      "key": "3/.zarray",
+      "file": "2375703c7d56e46b1d6d0e2586ebf893f75163869b157f03efb860e06babdbe1.body",
+      "sha256": "2375703c7d56e46b1d6d0e2586ebf893f75163869b157f03efb860e06babdbe1",
+      "bytes": 392,
+      "status": 200,
+      "contentType": "application/octet-stream",
+      "capturedUtc": "2026-11-19T17:55:35.600000+00:00",
+      "etag": "\"8109af09d4fc957ea087d2a0a4dab9bc\""
+    },
+    {
+      "url": "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0076A/10501752.zarr/3/42/0/0",
+      "key": "3/42/0/0",
+      "file": "779a45d061062f597553cd07d1fc916d3d3d9ddb48adc347ba61ebe7ed066b51.body",
+      "sha256": "779a45d061062f597553cd07d1fc916d3d3d9ddb48adc347ba61ebe7ed066b51",
+      "bytes": 15668,
+      "status": 200,
+      "contentType": "application/octet-stream",
+      "capturedUtc": "2026-11-19T17:55:35.600000+00:00",
+      "etag": "\"9d556ac066ae6b89bc52bf318cbacaf0\""
     }
   ]
 }

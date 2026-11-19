@@ -18,7 +18,7 @@ test('per-tile manual notes preserve context, persist, edit, export and delete w
   await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
   const cellId = await page.locator('#mosaic .object-tile').first().getAttribute('data-id');
   await page.locator('.tile-voice-notes').first().click();
-  await expect(page.locator('#voice-context')).toContainText(cellId!);
+  await expect(page.locator('#object-title')).toHaveText(cellId!);
   await page.locator('#voice-text').fill('Nucleus: fluorescence.\nCytoplasm: α-tubulin.');
   await page.locator('#voice-save').click();
   await expect(page.locator('.voice-saved-note')).toHaveCount(1);
@@ -66,7 +66,7 @@ test('per-tile manual notes preserve context, persist, edit, export and delete w
   expect(errors).toEqual([]);
 });
 
-test('manual draft works with denied microphone and blocked IndexedDB; export remains available', async ({
+test('manual draft works with denied microphone and blocked IndexedDB', async ({
   page,
   context,
 }) => {
@@ -90,9 +90,6 @@ test('manual draft works with denied microphone and blocked IndexedDB; export re
   await expect(page.locator('#voice-text')).toHaveValue(
     'Manual note without microphone or storage.',
   );
-  const download = page.waitForEvent('download');
-  await page.locator('#voice-export-draft').click();
-  expect((await download).suggestedFilename()).toContain('.json');
 });
 
 test('real IndexedDB transactions isolate snapshots and report CRUD only after commit', async ({

@@ -37,7 +37,7 @@ test('crop and inspector images use grayscale with green focused-instance contou
   colors = await inspectPixels('#inspector-canvas');
   expect(colors.otherColor).toBe(0);
   expect(colors.green).toBeGreaterThan(0);
-  await page.locator('#close').click();
+  await page.locator('#voice-close').click();
   await page.getByRole('button', { name: 'Show settings', exact: true }).click();
   await page.locator('#overlay').uncheck();
   colors = await inspectPixels('#mosaic canvas');

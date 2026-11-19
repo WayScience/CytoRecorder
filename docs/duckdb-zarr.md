@@ -30,7 +30,7 @@ compressor/endian descriptors are represented as equivalent V3 codec
 metadata; V3 codec descriptors are retained. No coordinate arrays are
 invented, and the remote source metadata is never rewritten.
 
-SQL uses a reserved `https://musivarium-chunk.invalid/<uuid>.zarr/` handle
+SQL uses a reserved `https://cytorecorder-chunk.invalid/<uuid>.zarr/` handle
 for DuckDB's in-memory filesystem. That handle is never a network source.
 Run JSON records `stats.decoding_backend='duckdb-zarr'` and each view's
 `original_chunk_url`, original array shape, global chunk origin, generated

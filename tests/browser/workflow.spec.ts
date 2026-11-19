@@ -125,14 +125,14 @@ test('offline original IDR bytes: metadata, 100 objects, inspector, display cont
   const tiles = page.locator('#mosaic [role=gridcell]');
   const initial = await tiles.first().getAttribute('data-id');
   await tiles.first().click();
-  await expect(page.locator('#inspector')).toBeVisible();
+  await expect(page.locator('#voice-notes-dialog')).toBeVisible();
   await expect(page.locator('#object-title')).toHaveText(initial!);
   await expect(page.locator('#object-fields')).toContainText('level 0, t 0, z 0');
   await expect(page.locator('#object-fields')).toContainText('Mean · channel 42');
-  await page.locator('#close').click();
+  await page.locator('#voice-close').click();
   await tiles.first().focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#inspector')).toBeVisible();
+  await expect(page.locator('#voice-notes-dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.locator('#overlay').uncheck();
   const fetched = network.requests.length,

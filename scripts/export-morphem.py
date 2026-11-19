@@ -51,7 +51,7 @@ def download_weights(path):
     fd, temporary = tempfile.mkstemp(prefix=".morphem-download-", dir=path.parent)
     try:
         print(f"Downloading pinned MorphEm weights ({WEIGHTS_BYTES} bytes)", flush=True)
-        request = urllib.request.Request(WEIGHTS_URL, headers={"User-Agent": "musivarium-setup/1"})
+        request = urllib.request.Request(WEIGHTS_URL, headers={"User-Agent": "cytorecorder-setup/1"})
         with os.fdopen(fd, "wb") as output:
             with urllib.request.urlopen(request, timeout=120) as response:
                 received = 0
@@ -230,7 +230,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("public/models/morphem-vit.onnx"))
     parser.add_argument("--weights", type=Path, help="Use existing pinned safetensors (offline; never overwritten)")
-    parser.add_argument("--cache-dir", type=Path, default=Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "musivarium" / "morphem" / REVISION)
+    parser.add_argument("--cache-dir", type=Path, default=Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "cytorecorder" / "morphem" / REVISION)
     parser.add_argument("--freeze-from", type=Path, help="Maintenance: derive the weight-free recipe from the original pinned ONNX")
     parser.add_argument("--recipe-output", type=Path, default=RECIPE)
     args = parser.parse_args()

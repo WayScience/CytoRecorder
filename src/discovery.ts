@@ -4,7 +4,7 @@ import { DuckDBZarrSource } from './sources/duckdb-zarr';
 import { planChunks } from './sources/chunks';
 
 export const BIA_SEARCH = 'https://beta.bioimagearchive.org/search/v1/search/fts/image';
-const HISTORY_KEY = 'musivarium-bia-discovery-v1';
+const HISTORY_KEY = 'cytorecorder-bia-discovery-v1';
 const PAGE_SIZE = 50;
 type RecordData = Record<string, any>;
 const record = (value: unknown): RecordData =>
@@ -80,10 +80,6 @@ export function datasetFromRecord(value: unknown): Dataset {
   if (!uri) throw Error('No directly readable archive OME-Zarr representation');
   const title =
     text(source.study_title) || text(source.dataset_title) || `BioImage Archive ${study}`;
-  const organisms = list(source.organism_classification)
-    .map((o) => text(o.scientific_name))
-    .filter(Boolean)
-    .join(', ');
   const methods = list(source.imaging_method)
     .filter((m) => typeof m === 'string')
     .join(', ');
@@ -92,13 +88,6 @@ export function datasetFromRecord(value: unknown): Dataset {
     .join('; ');
   const file =
     text(source.label) || list(source.file_path).filter((p) => typeof p === 'string')[0] || id;
-  const fileAnnotations = list(source.file_list_attributes)
-    .flatMap((entry) =>
-      Object.entries(record(record(entry.value).attributes))
-        .filter(([, value]) => typeof value === 'string' || typeof value === 'number')
-        .map(([key, value]) => `${key}: ${value}`),
-    )
-    .join('; ');
   const license =
     text(record(source.licence_details).label) || 'License not supplied; check source';
   const author = list(source.author_display_name).filter((a) => typeof a === 'string')[0];
@@ -116,12 +105,9 @@ export function datasetFromRecord(value: unknown): Dataset {
     biology: {
       title,
       description: [
-        organisms && `Organism: ${organisms}.`,
         methods && `Imaging: ${methods}.`,
         specimen && `Archive specimen: ${specimen}.`,
         `Image: ${file}.`,
-        fileAnnotations && `File annotations: ${fileAnnotations}.`,
-        'Biological context is reported by the archive; file-specific stains or treatments are not inferred.',
       ]
         .filter(Boolean)
         .join(' '),

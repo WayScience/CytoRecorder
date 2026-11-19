@@ -196,7 +196,7 @@ export function exportTable(
     const query = includeFeatures
       ? `SELECT selected.*, features.* EXCLUDE (cell_id) FROM (${selected}) selected LEFT JOIN morphem_features features USING (cell_id)`
       : selected;
-    const name = `musivarium-${++exportId}.${format}`;
+    const name = `cytorecorder-${++exportId}.${format}`;
     if (format === 'parquet') await ensureParquet();
     try {
       await connection.query(

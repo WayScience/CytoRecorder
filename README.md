@@ -25,7 +25,7 @@ A shared URL restores the exact image and sampling/display settings, rather than
 
 ## Local voice notes
 
-Each mosaic tile has a microphone button opening a **Voice notes** box. The inspector also has a Voice notes button. Click **Record note**, grant microphone access, dictate up to 90 seconds, then **Stop & transcribe**. Correct the transcript and explicitly **Save note locally**. The warning appears at 80 seconds; capture stops automatically at 90. A temporary WAV preview is available before saving; audio is never persisted.
+Clicking a mosaic tile, or its microphone button, opens one **Record annotations** panel on the right showing both the object's details and its note editor together. Click **Record note**, grant microphone access, dictate up to 90 seconds, then **Stop & transcribe**. The transcript saves automatically; correct it afterward and click **Save** to update it. The warning appears at 80 seconds; capture stops automatically at 90. A temporary WAV preview is available before saving; audio is never persisted.
 
 - Audio is downmixed and actually resampled to 16-kHz mono floating-point PCM. Local Whisper Tiny English runs in a dedicated, cancellable worker via pinned Transformers.js. First transcription downloads external model files; merely opening the app or writing a manual note does not load ASR. Cache eviction/private browsing can prevent offline use.
 - Image/cell IDs, bounding region, level/T/Z/channels, segmentation version/model, seed and full run settings are locked when recording or writing begins. Reordering or changing the mosaic cannot reattach a saved note. The current UI annotates one tile at a time; the schema supports an array of cell IDs.

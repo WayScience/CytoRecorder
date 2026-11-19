@@ -15,7 +15,7 @@ test('MorphEm features embed the inspected crop in the browser and download JSON
   });
   // Open the inspector for the first tile.
   await page.locator('#mosaic .object-tile').first().click();
-  await expect(page.locator('#inspector')).toBeVisible();
+  await expect(page.locator('#voice-notes-dialog')).toBeVisible();
   await expect(page.locator('#inspector-morphem')).toBeVisible();
   // The real 86 MB WASM graph must load from the dev server (not intercepted:
   // localhost requests continue) and embed the crop.

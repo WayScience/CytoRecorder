@@ -1,6 +1,6 @@
 # MorphEm features in the browser
 
-After segmentation, musivarium automatically embeds each native object crop with [MorphEm](https://github.com/CaicedoLab/MorphEm) — the CaicedoLab ViT-Small "Bag of Channels" DINO backbone trained on CHAMMI-75 — entirely client-side through ONNX Runtime Web, the same runtime that runs StarDist. A dedicated Web Worker runs one crop at a time, with its channels processed serially; inference does not run on the UI thread. No feature data leaves the browser.
+After segmentation, CytoRecorder automatically embeds each native object crop with [MorphEm](https://github.com/CaicedoLab/MorphEm) — the CaicedoLab ViT-Small "Bag of Channels" DINO backbone trained on CHAMMI-75 — entirely client-side through ONNX Runtime Web, the same runtime that runs StarDist. A dedicated Web Worker runs one crop at a time, with its channels processed serially; inference does not run on the UI thread. No feature data leaves the browser.
 
 ## What runs
 
@@ -46,7 +46,7 @@ The integrity chain is pinned independently:
 | Vendored graph recipe                                                               |      46,163 | `246f42e6fcff24dd1f8247adcf14b662487230a2571157570ccb8f167b55753c` |
 | Final `morphem-vit.onnx`                                                            |  86,216,588 | `819132f2ef159e04e718bdf7c9e83a1e30f81cd305ca1ff299d74c5a6a9cec31` |
 
-Missing upstream weights are downloaded over HTTPS from the pinned HuggingFace revision, verified before use, and cached under `${XDG_CACHE_HOME:-$HOME/.cache}/musivarium/morphem/<revision>/`. Both downloaded weights and generated output use temporary files followed by replacement only after verification. Existing corrupt model files fail closed rather than being silently replaced. Output is accepted only after matching the pinned final byte count and SHA-256; Node verifies it again before writing provenance.
+Missing upstream weights are downloaded over HTTPS from the pinned HuggingFace revision, verified before use, and cached under `${XDG_CACHE_HOME:-$HOME/.cache}/cytorecorder/morphem/<revision>/`. Both downloaded weights and generated output use temporary files followed by replacement only after verification. Existing corrupt model files fail closed rather than being silently replaced. Output is accepted only after matching the pinned final byte count and SHA-256; Node verifies it again before writing provenance.
 
 For offline provisioning from an already downloaded, pinned safetensors file:
 

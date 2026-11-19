@@ -105,7 +105,7 @@ const harness = {
     await context.audioWorklet.addModule(
       new URL('../../../src/voice/pcm.worklet.js', import.meta.url),
     );
-    const node = new AudioWorkletNode(context, 'musivarium-voice-pcm');
+    const node = new AudioWorkletNode(context, 'cytorecorder-voice-pcm');
     let frames = 0;
     let limit = false;
     let doneCount = 0;

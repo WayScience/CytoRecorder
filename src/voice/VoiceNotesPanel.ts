@@ -51,21 +51,19 @@ export class VoiceNotesPanel {
     host.innerHTML = `
       <div class="voice-box-heading"><h3>Voice notes</h3><span id="voice-count" class="hint">Stored only in this browser.</span><button id="voice-all" class="secondary" type="button">All notes</button></div>
       <p class="hint">Use a tile’s microphone to record or write a note about that cell. No audio is stored.</p>
-      <dialog id="voice-notes-dialog" aria-labelledby="voice-title" aria-describedby="voice-privacy">
-        <div class="dialog-head"><h2 id="voice-title">Voice notes</h2><button id="voice-close" class="secondary" type="button" aria-label="Close voice notes">Close ×</button></div>
-        <p id="voice-context" class="voice-context"></p>
-        <p id="voice-lock" class="hint">Context is locked when you start recording or writing, not when you save.</p>
-        <p id="voice-privacy" class="hint">Local English transcription. First transcription downloads Whisper Tiny English model files from Hugging Face (tens of MB), plus runtime assets. Audio and text are not uploaded. Browser caches can be cleared or evicted; offline operation is not guaranteed. No cloud speech fallback.</p>
-        <div class="voice-actions"><button id="voice-record" class="primary" type="button">Record note</button><button id="voice-stop" class="primary" type="button" hidden>Stop & transcribe</button><button id="voice-cancel" class="secondary" type="button" hidden>Discard / cancel</button><button id="voice-new" class="secondary" type="button">New text note</button><span id="voice-elapsed" role="timer" aria-label="Recording time" hidden></span></div>
+      <dialog id="voice-notes-dialog" aria-labelledby="voice-title">
+        <div class="dialog-head"><h2 id="voice-title">Record annotations</h2><button id="voice-close" class="secondary" type="button" aria-label="Close panel">Close ×</button></div>
+        <div class="voice-actions"><button id="voice-record" class="primary" type="button"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="5.5" y="1" width="5" height="8" rx="2.5"></rect><path d="M3 6.5v1a5 5 0 0 0 10 0v-1M8 12.5V15M5.5 15h5"></path></svg>Record note</button><button id="voice-stop" class="primary" type="button" hidden>Stop & transcribe</button><button id="voice-cancel" class="secondary" type="button" hidden>Discard / cancel</button><span id="voice-elapsed" role="timer" aria-label="Recording time" hidden></span></div>
         <p id="voice-status" class="voice-status" role="status" aria-live="polite"></p>
         <progress id="voice-progress" aria-label="Local transcription progress" hidden></progress><p id="voice-audio-warning" class="hint" hidden></p><p id="voice-transcript-warning" class="hint error" hidden></p>
         <audio id="voice-preview" controls preload="none" aria-label="Unsaved recording preview" hidden></audio>
         <button id="voice-retry" class="secondary" type="button" hidden>Retry local transcription</button>
         <label for="voice-text">Note text · edit before saving</label><textarea id="voice-text" rows="5" maxlength="${MAX_NOTE_LENGTH}" placeholder="Type a note, or record up to 90 seconds. Scientific terms may need correction." spellcheck="true"></textarea>
-        <div class="voice-actions voice-save-actions"><button id="voice-save" class="primary" type="button" disabled>Save note locally</button><button id="voice-export-draft" class="secondary" type="button" disabled>Export draft JSON</button></div>
+        <div class="voice-actions voice-save-actions"><button id="voice-save" class="primary" type="button" disabled>Save</button></div>
         <p class="hint">Notes stay on this origin and browser profile in IndexedDB, not in the image or shared link. Export a backup before clearing site data. Raw audio is never saved.</p>
         <div class="voice-list-heading"><h3>Saved notes</h3><button id="voice-scope" class="secondary" type="button">Show all saved notes</button><button id="voice-export" class="secondary" type="button" disabled>Export listed notes JSON</button></div>
         <div id="voice-list" aria-label="Saved local voice notes"></div>
+        <section id="object-details" hidden><canvas id="inspector-canvas" aria-label="Selected object crop"></canvas><p class="hint">One plane, native pixel aspect ratio.</p><div class="voice-actions"><button id="crop-png" class="secondary">Save preview PNG</button><button id="inspector-morphem" class="secondary" type="button">MorphEm features</button></div><h3 id="object-title"></h3><dl id="object-fields"></dl><canvas id="origin" width="320" height="220" aria-label="Source coordinate map"></canvas><p class="hint">Source-coordinate map, not a whole-image download. Boxes mark sampled regions.</p><a id="source-link" target="_blank" rel="noopener">Open source in NGFF validator ↗</a></section>
       </dialog>`;
     this.dialog = this.el<HTMLDialogElement>('voice-notes-dialog');
     this.text = this.el<HTMLTextAreaElement>('voice-text');
@@ -74,23 +72,10 @@ export class VoiceNotesPanel {
     this.button('voice-record').onclick = () => void this.record();
     this.button('voice-stop').onclick = () => void this.stop();
     this.button('voice-cancel').onclick = () => this.cancel();
-    this.button('voice-new').onclick = () => {
-      if (!this.keepDraft()) {
-        this.resetDraft();
-        this.text.focus();
-      }
-    };
     this.button('voice-retry').onclick = () => void this.transcribe();
     this.button('voice-save').onclick = () => void this.save();
-    this.button('voice-export-draft').onclick = () => {
-      try {
-        this.export([this.draftNote()], 'musivarium-note-draft.json');
-      } catch (error) {
-        this.error(error);
-      }
-    };
     this.button('voice-export').onclick = () =>
-      this.export(this.listedNotes(), 'musivarium-voice-notes.json');
+      this.export(this.listedNotes(), 'cytorecorder-voice-notes.json');
     this.button('voice-scope').onclick = () => {
       this.all = !this.all;
       this.renderList();
@@ -100,7 +85,8 @@ export class VoiceNotesPanel {
       this.showTranscriptWarning(this.text.value);
       this.controls();
     };
-    this.dialog.addEventListener('cancel', (event) => {
+    this.dialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
       event.preventDefault();
       this.close();
     });
@@ -129,18 +115,20 @@ export class VoiceNotesPanel {
     return this.text.value !== this.savedText || this.audio !== undefined;
   }
 
-  open(context: VoiceContext = { selectedCellIds: [] }): void {
+  open(context: VoiceContext = { selectedCellIds: [] }): boolean {
     if (this.isBusy) {
       this.status('Finish or cancel the current voice task first.', true);
-      return;
+      return false;
     }
-    if (this.keepDraft()) return;
+    if (this.keepDraft()) return false;
     this.context = structuredClone(context);
     this.all = !context.selectedCellIds.length;
     this.resetDraft();
-    this.dialog.showModal();
+    this.el('object-details').hidden = true; // caller repopulates/reveals for a specific cell
+    this.dialog.show(); // Non-modal: the mosaic stays visible and usable behind the panel.
     this.text.focus();
     void this.refresh().catch((error) => this.error(error));
+    return true;
   }
 
   private keepDraft(): boolean {
@@ -170,17 +158,6 @@ export class VoiceNotesPanel {
   private lockContext(): void {
     this.draftContext = snapshotContext(this.draftContext);
     this.locked = true;
-    this.renderContext();
-  }
-
-  private renderContext(): void {
-    const c = this.draftContext;
-    this.el('voice-context').textContent = c.selectedCellIds.length
-      ? `${c.selectedCellIds.join(', ')} · ${c.imageId ?? 'image'}${c.plane ? ` · level ${c.plane.level}, T ${c.plane.t}, Z ${c.plane.z}, channel(s) ${c.plane.channels.join(', ')}` : ''}${c.labelSource ? ` · label source ${c.labelSource}` : c.segmentationModel ? ` · segmentation ${c.segmentationModel}` : ''}`
-      : 'Unattached note · no cell selected. Use a tile’s microphone for image/cell context.';
-    this.el('voice-lock').textContent = this.locked
-      ? `Context locked at ${c.contextCapturedAt ?? 'original creation'}. Changing the mosaic cannot reattach this note.`
-      : 'Context will lock when you start recording or writing, not when you save.';
   }
 
   private clearPreview(): void {
@@ -207,7 +184,6 @@ export class VoiceNotesPanel {
     this.el('voice-retry').hidden = true;
     this.showTranscriptWarning('');
     this.status(this.storageError);
-    this.renderContext();
     this.controls();
     this.renderList();
   }
@@ -228,12 +204,10 @@ export class VoiceNotesPanel {
 
   private controls(): void {
     this.button('voice-record').disabled = this.isBusy || !!this.editing;
-    this.button('voice-new').disabled = this.isBusy;
     this.button('voice-stop').hidden = this.phase !== 'recording';
     this.button('voice-cancel').hidden =
       !this.isBusy || this.phase === 'saving' || this.phase === 'deleting';
     this.button('voice-save').disabled = this.isBusy || !this.text.value.trim();
-    this.button('voice-export-draft').disabled = this.isBusy || !this.text.value.trim();
     this.button('voice-retry').disabled = this.isBusy;
     this.text.readOnly = this.isBusy;
     for (const control of this.host.querySelectorAll<HTMLButtonElement>(
@@ -357,11 +331,12 @@ export class VoiceNotesPanel {
       this.text.value = transcript.text;
       this.el('voice-retry').hidden = !!transcript.text.trim();
       this.showTranscriptWarning(transcript.text);
-      this.status(
-        transcript.text.trim()
-          ? 'Transcript ready. Correct scientific terms, then save locally.'
-          : 'No speech recognized. Retry or type a note.',
-      );
+      if (transcript.text.trim()) {
+        this.phase = 'idle'; // save() checks isBusy; this phase would otherwise still be 'transcribing'.
+        await this.save(); // No manual step: a transcript is saved as soon as it exists.
+      } else {
+        this.status('No speech recognized. Retry or type a note.');
+      }
       this.text.focus();
     } catch (error) {
       if (epoch !== this.epoch) return;
@@ -488,7 +463,6 @@ export class VoiceNotesPanel {
         this.draftContext = structuredClone(note);
         this.locked = true;
         this.text.value = this.savedText = note.text;
-        this.renderContext();
         this.controls();
         this.text.focus();
       };
@@ -514,7 +488,7 @@ export class VoiceNotesPanel {
       exportOne.className = 'secondary';
       exportOne.textContent = 'Export JSON';
       exportOne.type = 'button';
-      exportOne.onclick = () => this.export([note], 'musivarium-note.json');
+      exportOne.onclick = () => this.export([note], 'cytorecorder-note.json');
       edit.disabled = remove.disabled = this.isBusy;
       actions.append(edit, remove, exportOne);
       article.append(info, content, actions);

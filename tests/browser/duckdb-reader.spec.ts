@@ -95,7 +95,7 @@ test('DuckDB native-byte hashes and registered chunk readbacks match the indepen
           registeredHashes,
           readbackHashes,
           remaining: (await db.globFiles('*')).filter((f: any) =>
-            f.fileName.includes('musivarium-chunk.invalid'),
+            f.fileName.includes('cytorecorder-chunk.invalid'),
           ),
         };
       } finally {

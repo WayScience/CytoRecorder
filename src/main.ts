@@ -5,6 +5,7 @@ import {
   parseSettings,
   settingsUrl,
   validateSettings,
+  type Pixels,
   type Settings,
 } from './core';
 import type { Cell, RunResult, Progress } from './pipeline';
@@ -12,7 +13,7 @@ import type { NgffMetadata, Alignment } from './sources/browser';
 import type { NetworkProgress } from './sources/read-session';
 import { datasetForSource, referenceForDate, REFERENCE_POOL, registerDataset } from './datasets';
 import { LiveImageDiscovery, archiveImageId, describeArchiveSource } from './discovery';
-import { drawCrop, seededOrder } from './render';
+import { drawCrop, seededOrder, composite } from './render';
 import { download, cropArchive, provenance } from './exports';
 import { MorphEmBackground } from './features/background';
 import { MorphEmClient } from './features/client';
@@ -21,7 +22,7 @@ import { VoiceNotesPanel } from './voice/VoiceNotesPanel';
 import { associationKey, contextForCell } from './voice/context';
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 $('#app').innerHTML = `
-<header class="topbar"><a class="wordmark" href="./"><img src="./logo.png" alt="CytoRecorder" class="logo" width="402" height="112"></a><button id="about-toggle" type="button" class="about-toggle"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.3"></circle><circle cx="8" cy="4.7" r="0.9" fill="currentColor"></circle><path d="M8 7.2v4.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>About</button><a class="source-link" href="https://github.com/d33bs/musivarium" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg>Source</a></header>
+<header class="topbar"><a class="wordmark" href="./"><img src="./logo.png" alt="CytoRecorder" class="logo" width="402" height="112"></a><button id="about-toggle" type="button" class="about-toggle"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.3"></circle><circle cx="8" cy="4.7" r="0.9" fill="currentColor"></circle><path d="M8 7.2v4.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>About</button><a class="source-link" href="https://github.com/WayScience/musivarium" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg>Source</a></header>
 <main class="settings-collapsed"><aside id="controls-panel" class="controls" hidden><div class="controls-heading"><button id="close-settings" type="button" class="secondary" aria-label="Hide settings">Hide ×</button></div>
 <form id="settings"><label for="preset">Sample dataset</label><select id="preset"><option value="reference">BIA · discover a new image</option><option value="labels">IDR0076 · verified cell labels</option><option value="idr0033">IDR0033 · supplied source</option><option value="custom">Your OME-Zarr image</option></select>
 <label for="source">OME-Zarr image-group URL</label><input id="source" name="source" type="url" required spellcheck="false"><p class="hint">An image group, not a plate or array. Direct HTTPS reads; no server upload.</p>
@@ -47,12 +48,12 @@ $('#app').innerHTML = `
 <div id="status" class="status" role="status" aria-live="polite" hidden></div><div id="reading-progress" class="reading-progress" hidden><div class="reading-heading"><span>Image / label transfer</span><span id="read-elapsed">0.0 s</span></div><progress id="progress" max="1" aria-label="Image and label download progress" aria-describedby="read-summary" title="Download totals cover discovered requests, not an estimated overall job size"></progress><div id="read-summary" class="read-summary">Waiting for the source…</div><div id="read-file" class="read-file"></div></div>
 <div class="hint" id="morphem-panel" hidden><span id="morphem-status" role="status" aria-live="polite"></span> <button id="morphem-pause" type="button" class="secondary">Pause features</button><button id="morphem-retry" type="button" class="secondary" hidden>Retry features</button></div><div id="metrics" class="metrics" hidden></div><div id="warnings" class="warnings" hidden></div>
 <div class="result-count" id="result-count" role="status" aria-live="polite">No objects sampled yet</div>
+<details id="whole-preview" class="whole-preview" hidden><summary>Whole image preview</summary><div class="whole-preview-body"><canvas id="whole-preview-canvas" aria-label="Downsampled whole image preview"></canvas><p id="whole-preview-note" class="hint"></p></div></details>
 <div id="mosaic-scroll" class="mosaic-scroll" tabindex="0" aria-label="Scrollable single-object mosaic"><div id="empty" class="empty"><span class="empty-glyph" aria-hidden="true">▦</span><p>Small samples.<br>Unexpected details.</p><span>Choose a source, a plane, and a seed.</span></div><div id="mosaic" role="grid" aria-label="Single-object image crops"></div></div>
 <div class="mosaic-caption">Each tile is one object-centered crop, shown in grayscale with a green outline on the focused instance. Click or press Enter to inspect. Display contrast is per crop; means are measured on raw pixels.</div>
 <p class="credit" id="credit">Default: IDR0076, Ali et al., CC BY 4.0. Verified 2D tissue cell labels. Display override: channel 42, DNA1-191Ir. Images hosted by IDR / EMBL-EBI.</p><div class="export-row"><span>Export this view</span><button id="csv" class="secondary" disabled>CSV</button><button id="parquet" class="secondary" disabled>Parquet</button><button id="raw" class="secondary" disabled>Native crops ZIP</button><button id="mosaic-png" class="secondary" disabled>Mosaic PNG</button><button id="manifest" class="secondary" disabled>Run JSON</button></div>
 <section id="voice-notes" aria-label="Local voice notes"></section><pre id="run-details" hidden>No run yet.</pre></section></main>
-<dialog id="about"><div class="dialog-head"><h2>About</h2><button id="close-about" class="secondary" aria-label="Close about dialog">Close ×</button></div><p>CytoRecorder samples single-plane, single-object crops from large OME-NGFF / IDR microscopy images, directly in the browser. No image data is uploaded to a server.</p><ul class="about-tech"><li><a href="https://ngff.openmicroscopy.org/" target="_blank" rel="noopener">OME-NGFF / OME-Zarr</a> — the chunked, cloud-native image format read here.</li><li><a href="https://github.com/xqlsystems/duckdb-zarr" target="_blank" rel="noopener">DuckDB-Zarr</a> — decodes original Zarr chunks and reads image and label pixels through SQL in WASM. Bounded browser downloads feed complete single-chunk in-memory views; source coordinates are preserved.</li><li><a href="https://duckdb.org/docs/api/wasm/overview" target="_blank" rel="noopener">DuckDB-WASM</a> — local SQL engine behind the CSV/Parquet export.</li><li><a href="https://onnxruntime.ai/docs/tutorials/web/" target="_blank" rel="noopener">ONNX Runtime Web</a> — runs the pretrained StarDist nuclei model client-side.</li><li><a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener">Transformers.js</a> + <a href="https://huggingface.co/onnx-community/whisper-tiny.en" target="_blank" rel="noopener">Whisper Tiny English</a> — optional local voice transcription in a dedicated worker, using ONNX Runtime Web. Model downloads happen on first transcription, not page load. Notes are saved only in this browser’s IndexedDB; audio is not stored or uploaded.</li><li><a href="https://github.com/101arrowz/fflate" target="_blank" rel="noopener">fflate</a> — native-crop ZIP archive export.</li><li><a href="https://vite.dev/" target="_blank" rel="noopener">Vite</a> + <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener">TypeScript</a> — build tooling and app code.</li></ul><p class="hint">Source: <a href="https://github.com/d33bs/musivarium" target="_blank" rel="noopener">github.com/d33bs/musivarium</a></p></dialog>
-<dialog id="inspector"><div class="dialog-head"><h2>Object inspector</h2><button id="close" class="secondary" aria-label="Close object inspector">Close ×</button></div><div class="inspector-grid"><div><canvas id="inspector-canvas" aria-label="Selected object crop"></canvas><p class="hint">One plane, native pixel aspect ratio.</p><button id="crop-png" class="secondary">Save preview PNG</button><button id="inspector-morphem" class="secondary" type="button">MorphEm features</button><button id="inspector-voice" class="secondary" type="button">Voice notes</button></div><div><h3 id="object-title"></h3><dl id="object-fields"></dl><canvas id="origin" width="320" height="220" aria-label="Source coordinate map"></canvas><p class="hint">Source-coordinate map, not a whole-image download. Boxes mark sampled regions.</p><a id="source-link" target="_blank" rel="noopener">Open source in NGFF validator ↗</a></div></div></dialog>`;
+<dialog id="about"><div class="dialog-head"><h2>About</h2><button id="close-about" class="secondary" aria-label="Close about dialog">Close ×</button></div><p>CytoRecorder samples single-plane, single-object crops from large OME-NGFF / IDR microscopy images, directly in the browser. No image data is uploaded to a server.</p><p class="about-tech">Built with <a href="https://ngff.openmicroscopy.org/" target="_blank" rel="noopener">OME-NGFF / OME-Zarr</a>, the chunked, cloud-native image format read here; <a href="https://github.com/xqlsystems/duckdb-zarr" target="_blank" rel="noopener">DuckDB-Zarr</a>, which decodes original Zarr chunks and reads image and label pixels through SQL in WASM, with bounded browser downloads feeding complete single-chunk in-memory views and preserved source coordinates; <a href="https://duckdb.org/docs/api/wasm/overview" target="_blank" rel="noopener">DuckDB-WASM</a>, the local SQL engine behind the CSV/Parquet export; <a href="https://onnxruntime.ai/docs/tutorials/web/" target="_blank" rel="noopener">ONNX Runtime Web</a>, which runs the pretrained StarDist nuclei model client-side; <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener">Transformers.js</a> and <a href="https://huggingface.co/onnx-community/whisper-tiny.en" target="_blank" rel="noopener">Whisper Tiny English</a> for optional local voice transcription in a dedicated worker — model downloads happen on first transcription, not page load, and notes are saved only in this browser’s IndexedDB with audio never stored or uploaded; <a href="https://github.com/101arrowz/fflate" target="_blank" rel="noopener">fflate</a> for native-crop ZIP archive export; and <a href="https://vite.dev/" target="_blank" rel="noopener">Vite</a> plus <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener">TypeScript</a> for build tooling and app code.</p><p class="hint">Source: <a href="https://github.com/WayScience/musivarium" target="_blank" rel="noopener">github.com/WayScience/musivarium</a></p></dialog>`;
 const archiveDiscovery = new LiveImageDiscovery();
 let discoveryAbort: AbortController | undefined;
 let settings: Settings;
@@ -79,6 +80,9 @@ let result: RunResult | undefined,
   runStarted = 0,
   firstBatchMs = 0,
   running = false;
+let previewWorker: Worker | undefined,
+  previewGeneration = 0,
+  previewLoadedFor: RunResult | undefined;
 const voiceCounts = new Map<string, number>();
 let featurePreparation: Promise<void> = Promise.resolve();
 const morphem = new MorphEmBackground(new MorphEmClient(), (state) => {
@@ -105,7 +109,10 @@ window.addEventListener('pagehide', () => {
   morphem.stop();
 });
 const voiceNotes = new VoiceNotesPanel($('#voice-notes'), {
-  onClose: () => morphem.resume('voice'),
+  onClose: () => {
+    morphem.resume('voice');
+    $('#object-details').hidden = true;
+  },
   prepareRecording: () => {
     if (running)
       throw Error(
@@ -540,7 +547,7 @@ $('#settings').onsubmit = (event) => {
 button('inspect').onclick = () => start('inspect');
 function clearResults() {
   selected = undefined;
-  $<HTMLDialogElement>('#inspector').close();
+  $('#object-details').hidden = true;
   result = undefined;
   morphem.stop();
   visible = [];
@@ -550,6 +557,11 @@ function clearResults() {
   $('#warnings').hidden = true;
   $('#run-details').textContent = 'No completed run.';
   $('#result-count').textContent = 'No completed run';
+  previewWorker?.terminate();
+  previewWorker = undefined;
+  previewLoadedFor = undefined;
+  $<HTMLDetailsElement>('#whole-preview').hidden = true;
+  $('#whole-preview-note').textContent = '';
   renderGrid();
 }
 function setExports(enabled: boolean) {
@@ -567,6 +579,9 @@ async function finish(run: RunResult) {
   setStatus(run.cells.length ? '' : 'No objects matched the filters.');
   applyFilters();
   setExports(true);
+  previewLoadedFor = undefined;
+  $<HTMLDetailsElement>('#whole-preview').hidden = false;
+  if ($<HTMLDetailsElement>('#whole-preview').open) loadWholePreview();
   try {
     const { loadCells } = await import('./database');
     await loadCells(run.cells);
@@ -579,6 +594,65 @@ async function finish(run: RunResult) {
   }
   featurizeInBackground(run);
 }
+/** Lazily fetches the coarsest pyramid level in a dedicated worker, kept
+ * separate from the sampling worker so opening this panel never competes
+ * with (or is torn down by) an in-progress or background run. */
+function loadWholePreview() {
+  const run = result;
+  if (!run || previewLoadedFor === run) return;
+  previewLoadedFor = run;
+  previewWorker?.terminate();
+  $('#whole-preview-note').textContent = 'Loading…';
+  const id = ++previewGeneration;
+  previewWorker = new Worker(new URL('./preview.worker.ts', import.meta.url), {
+    type: 'module',
+  });
+  previewWorker.onerror = (event) => {
+    if (id !== previewGeneration) return;
+    $('#whole-preview-note').textContent = `Preview worker error: ${event.message}`;
+  };
+  previewWorker.onmessage = (event) => {
+    if (event.data.id !== id) return;
+    const { type, data } = event.data;
+    if (type === 'preview') drawWholePreview(run, data);
+    else if (type === 'unavailable') $('#whole-preview-note').textContent = String(data);
+    else if (type === 'error')
+      $('#whole-preview-note').textContent = `Whole-image preview failed: ${String(data)}`;
+  };
+  previewWorker.postMessage({ id, settings: run.settings });
+}
+function drawWholePreview(
+  run: RunResult,
+  data: {
+    width: number;
+    height: number;
+    z: number;
+    t: number;
+    channels: number[];
+    pixels: Pixels[];
+  },
+) {
+  if (result !== run) return;
+  const canvas = $<HTMLCanvasElement>('#whole-preview-canvas');
+  canvas.width = data.width;
+  canvas.height = data.height;
+  const colorsFor = data.channels.map((c) => (hiddenChannels.has(c) ? '000000' : 'FFFFFF')),
+    low = Number(input('display-low').value),
+    high = Number(input('display-high').value),
+    limits =
+      select('contrast').value === 'fixed' && high > low
+        ? data.channels.map(() => [low, high] as [number, number])
+        : undefined;
+  const pixels = composite(data.pixels, data.width, data.height, colorsFor, limits);
+  canvas
+    .getContext('2d')!
+    .putImageData(new ImageData(new Uint8ClampedArray(pixels), data.width, data.height), 0, 0);
+  $('#whole-preview-note').textContent =
+    `${data.width} × ${data.height} px · level ${run.metadata.levels.length - 1} (coarsest pyramid level) · Z ${data.z} · time ${data.t}`;
+}
+$<HTMLDetailsElement>('#whole-preview').addEventListener('toggle', () => {
+  if ($<HTMLDetailsElement>('#whole-preview').open) loadWholePreview();
+});
 /** Publish each completed crop without replacing the base measurement table. */
 function featurizeInBackground(run: RunResult) {
   if (result !== run || !dbReady || !run.cells.length) return;
@@ -717,7 +791,7 @@ function renderGrid() {
         count.textContent = String(noteCount);
         voice.append(count);
       }
-      voice.onclick = () => voiceNotes.open(contextForCell(cell));
+      voice.onclick = () => openInspector(cell);
       grid.append(tile, voice);
     }
 }
@@ -727,6 +801,7 @@ $('#mosaic-scroll').onscroll = () => {
 };
 new ResizeObserver(() => renderGrid()).observe($('#mosaic-scroll'));
 function openInspector(cell: Cell) {
+  if (!voiceNotes.open(contextForCell(cell))) return;
   selected = cell;
   $('#object-title').textContent = cell.cell_id;
   const fields = $('#object-fields');
@@ -759,8 +834,8 @@ function openInspector(cell: Cell) {
   }
   const link = $<HTMLAnchorElement>('#source-link');
   link.href = 'https://ome.github.io/ome-ngff-validator/?source=' + encodeURIComponent(cell.source);
+  $('#object-details').hidden = false;
   drawInspector();
-  $<HTMLDialogElement>('#inspector').showModal();
 }
 function drawInspector() {
   if (!selected || !result) return;
@@ -795,12 +870,6 @@ function drawInspector() {
     Math.max(3, selected.height * scale),
   );
 }
-button('inspector-voice').onclick = () => {
-  if (!selected) return;
-  const context = contextForCell(selected);
-  $<HTMLDialogElement>('#inspector').close();
-  voiceNotes.open(context);
-};
 button('inspector-morphem').onclick = () =>
   perform(async () => {
     if (!selected) return;
@@ -841,7 +910,6 @@ button('inspector-morphem').onclick = () =>
       buttonElement.textContent = 'MorphEm features';
     }
   });
-button('close').onclick = () => $<HTMLDialogElement>('#inspector').close();
 button('share').onclick = async () => {
   try {
     const url = withView(settingsUrl(readSettings(), location.href), readView());
@@ -867,7 +935,7 @@ for (const format of ['csv', 'parquet'] as const)
       const { exportTable } = await import('./database');
       const bytes = await exportTable(query, format, true);
       if (result !== snapshot) return;
-      download(bytes, `musivarium.${format}`);
+      download(bytes, `cytorecorder.${format}`);
     });
 button('manifest').onclick = () => {
   if (result)
@@ -883,7 +951,7 @@ button('manifest').onclick = () => {
           2,
         ),
       ),
-      'musivarium-run.json',
+      'cytorecorder-run.json',
       'application/json',
     );
 };
@@ -897,7 +965,7 @@ button('raw').onclick = () =>
     try {
       const bytes = await cropArchive(snapshot, cells);
       if (result !== snapshot) return;
-      download(bytes, 'musivarium-crops.zip', 'application/zip');
+      download(bytes, 'cytorecorder-crops.zip', 'application/zip');
       setStatus('Native crop archive exported with per-object metadata and original dtypes.');
     } finally {
       if (result === snapshot) button('raw').disabled = false;
@@ -937,7 +1005,7 @@ button('mosaic-png').onclick = () =>
       drawCrop(tile, cell, colors(cell), input('overlay').checked, size, displayOptions(cell));
       ctx.drawImage(tile, (i % cols) * size, Math.floor(i / cols) * size);
     });
-    await saveCanvas(canvas, 'musivarium-mosaic-preview.png');
+    await saveCanvas(canvas, 'cytorecorder-mosaic-preview.png');
   });
 
 if (initialSettingsValid) {

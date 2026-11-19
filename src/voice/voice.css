@@ -25,19 +25,44 @@
   margin: 5px 0 0;
 }
 #voice-notes-dialog {
-  width: min(760px, 95vw);
+  position: fixed;
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: min(420px, 100vw);
+  max-width: 100vw;
+  max-height: none;
+  height: 100vh;
+  border: none;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: -8px 0 28px #03090dc9;
+  overflow-y: auto;
+  z-index: 20;
 }
-.voice-context {
-  overflow-wrap: anywhere;
-  font-size: 12px;
-  border-left: 2px solid var(--accent);
-  padding-left: 12px;
+#voice-notes-dialog::backdrop {
+  display: none;
+}
+@media (max-width: 700px) {
+  #voice-notes-dialog {
+    inset: auto 0 0 0;
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 28px #03090dc9;
+  }
+}
+#voice-record {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .voice-status {
   min-height: 1.5em;
   color: var(--muted);
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 13px;
 }
 .voice-status.error {
   color: #ffb1a3;
@@ -53,7 +78,7 @@
 #voice-text {
   min-height: 130px;
   resize: vertical;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
 }
 .voice-save-actions {
@@ -66,7 +91,7 @@
 }
 #voice-list {
   margin-top: 14px;
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .voice-saved-note {
@@ -96,7 +121,7 @@
   border-color: var(--accent);
 }
 .tile-voice-notes span {
-  font-size: 9px;
+  font-size: 10px;
 }
 @media (pointer: coarse) {
   .tile-voice-notes {

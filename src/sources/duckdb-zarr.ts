@@ -202,7 +202,7 @@ export class DuckDBZarrSource {
       await ensureZarr();
       const { db, connection } = await database();
       this.signal.throwIfAborted();
-      const root = `https://musivarium-chunk.invalid/${crypto.randomUUID()}.zarr/`;
+      const root = `https://cytorecorder-chunk.invalid/${crypto.randomUUID()}.zarr/`;
       const meta = chunkView(info, axes),
         json = (v: unknown) => new TextEncoder().encode(JSON.stringify(v));
       const group = {

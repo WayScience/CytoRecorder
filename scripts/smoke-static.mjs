@@ -237,7 +237,7 @@ for (const prefix of ['', '/musivarium']) {
           features.embeddings[0].some((v) => !Number.isFinite(v))
         )
           throw Error('Invalid production MorphEm embedding');
-        await page.locator('#close').click();
+        await page.locator('#voice-close').click();
         if (voiceAssets.length || voiceModelRequests.length)
           throw Error('ASR loaded at page startup');
         const voiceCell = await page.locator('.object-tile').first().getAttribute('data-id');
@@ -343,7 +343,7 @@ for (const prefix of ['', '/musivarium']) {
         const discoveredSource = new URL(page.url()).searchParams.get('source');
         if (
           !(await page.locator('#image-description').textContent()).includes(
-            'marine plankton environmental sample',
+            'Archive specimen: Plankton',
           )
         )
           throw Error('Discovered source is missing actual biological provenance');

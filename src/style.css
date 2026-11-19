@@ -1,5 +1,33 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter-variable.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../fonts/space-grotesk-variable.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/ibm-plex-mono-500.woff2') format('woff2');
+}
 :root {
-  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
   color: #e6ecea;
   background: #101b20;
   font-synthesis: none;
@@ -10,12 +38,17 @@
   --ink: #101b20;
   --radius: 5px;
 }
+h1,
+h2,
+h3 {
+  font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif;
+}
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
 }
 button,
@@ -59,7 +92,7 @@ a {
   align-items: center;
   gap: 10px;
   margin-left: -16px;
-  font-size: 25px;
+  font-size: 28px;
   letter-spacing: -1px;
   font-weight: 600;
   text-decoration: none;
@@ -73,7 +106,7 @@ a {
   background: transparent;
   border: none;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   padding: 0;
   min-height: auto;
   cursor: pointer;
@@ -89,7 +122,7 @@ a {
   color: #e6ecea;
 }
 .source-link {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -144,24 +177,24 @@ main.settings-collapsed {
 }
 .section-label {
   font:
-    11px 'IBM Plex Mono',
+    12px 'IBM Plex Mono',
     monospace;
   letter-spacing: 1.8px;
   color: var(--accent);
 }
 h2 {
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 500;
   letter-spacing: -0.5px;
   margin: 9px 0 0;
 }
 h3 {
-  font-size: 16px;
+  font-size: 18px;
   overflow-wrap: anywhere;
 }
 label {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: #b9c8c9;
   margin: 14px 0 6px;
@@ -176,7 +209,7 @@ textarea {
   border-radius: var(--radius);
   min-height: 38px;
   padding: 8px 9px;
-  font-size: 12px;
+  font-size: 13px;
 }
 input:focus,
 select:focus,
@@ -185,7 +218,7 @@ textarea:focus {
 }
 #source {
   font:
-    11px 'IBM Plex Mono',
+    12px 'IBM Plex Mono',
     monospace;
   letter-spacing: -0.1px;
 }
@@ -205,7 +238,7 @@ button {
   cursor: pointer;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  font-size: 12px;
+  font-size: 13px;
   min-height: 36px;
   padding: 7px 12px;
   font-weight: 500;
@@ -236,7 +269,7 @@ button:disabled {
   width: 100%;
 }
 .hint {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.55;
   margin: 6px 0 12px;
@@ -256,7 +289,7 @@ button:disabled {
 }
 .plane-note {
   font:
-    10px 'IBM Plex Mono',
+    11px 'IBM Plex Mono',
     monospace;
   color: var(--accent);
   margin: 8px 0;
@@ -265,7 +298,7 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 13px;
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 8px;
   color: var(--muted);
 }
@@ -291,21 +324,21 @@ button:disabled {
 }
 .seed-row button {
   height: 38px;
-  font-size: 21px;
+  font-size: 23px;
   width: 40px;
 }
 .advanced {
   margin-top: 18px;
 }
 .advanced summary {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   cursor: pointer;
 }
 .check {
   display: flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
 }
 .run-actions {
@@ -321,13 +354,13 @@ button:disabled {
   border-top: 1px solid var(--line);
   padding-top: 18px;
   margin-top: 24px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   line-height: 1.65;
 }
 .metadata {
   font:
-    10px 'IBM Plex Mono',
+    11px 'IBM Plex Mono',
     monospace;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -340,6 +373,13 @@ button:disabled {
   min-width: 0;
   padding: 30px 34px 40px;
 }
+@media (min-width: 701px) {
+  /* Reserve room for the open voice-notes side panel so it never covers
+     part of the mosaic/biology text rather than just floating over it. */
+  main:has(#voice-notes-dialog[open]) .workspace {
+    padding-right: calc(34px + min(420px, 100vw));
+  }
+}
 #image-biology {
   margin-bottom: 20px;
   max-width: 80ch;
@@ -347,18 +387,18 @@ button:disabled {
 }
 #image-title {
   margin: 0 0 8px;
-  font-size: 23px;
+  font-size: 25px;
   font-weight: 500;
   line-height: 1.25;
 }
 #image-description {
   margin: 0 0 8px;
-  font-size: 14px;
+  font-size: 16px;
 }
 #image-attribution {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .mosaic-header {
   display: flex;
@@ -367,10 +407,36 @@ button:disabled {
   gap: 15px;
   margin-bottom: 12px;
 }
+.whole-preview {
+  margin: 0 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  padding: 10px 14px;
+}
+.whole-preview summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+}
+.whole-preview-body {
+  margin-top: 10px;
+}
+.whole-preview-body canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  background: #050505;
+  border-radius: 4px;
+  image-rendering: pixelated;
+}
+.whole-preview-body .hint {
+  margin: 8px 0 0;
+}
 .status {
   padding: 12px 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   min-height: 42px;
   overflow-wrap: anywhere;
 }
@@ -379,7 +445,7 @@ button:disabled {
 }
 .metrics {
   font:
-    11px 'IBM Plex Mono',
+    12px 'IBM Plex Mono',
     monospace;
   color: #d9e6e1;
   margin: 5px 0 15px;
@@ -389,7 +455,7 @@ button:disabled {
   background: #272c25;
   padding: 10px 12px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 12px;
   margin: 6px 0 17px;
 }
 .reading-progress {
@@ -404,15 +470,15 @@ button:disabled {
   justify-content: space-between;
   gap: 12px;
   color: var(--accent);
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 8px;
 }
 .read-summary {
-  font-size: 12px;
+  font-size: 13px;
   color: #d1dcd9;
 }
 .read-file {
-  font: 10px/1.5 monospace;
+  font: 11px/1.5 monospace;
   color: var(--muted);
   overflow-wrap: anywhere;
   margin-top: 5px;
@@ -432,7 +498,7 @@ progress {
 .result-count {
   padding: 13px 0;
   font:
-    10px 'IBM Plex Mono',
+    11px 'IBM Plex Mono',
     monospace;
   color: var(--muted);
 }
@@ -472,7 +538,7 @@ progress {
   bottom: 3px;
   right: 5px;
   font:
-    9px 'IBM Plex Mono',
+    10px 'IBM Plex Mono',
     monospace;
   color: #c0cecb;
   text-shadow: 0 1px 4px black;
@@ -497,11 +563,11 @@ progress {
   display: none;
 }
 .empty-glyph {
-  font-size: 42px;
+  font-size: 45px;
   color: #637970;
 }
 .empty p {
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 400;
   letter-spacing: -0.5px;
   color: #c0cecb;
@@ -509,10 +575,10 @@ progress {
   margin: 17px 0 16px;
 }
 .empty span:last-child {
-  font-size: 12px;
+  font-size: 13px;
 }
 .mosaic-caption {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   padding: 10px 0 17px;
 }
@@ -525,12 +591,12 @@ progress {
   border-bottom: 1px solid var(--line);
 }
 .export-row > span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-right: 7px;
 }
 .export-row button {
-  font-size: 10px;
+  font-size: 11px;
   min-height: 32px;
 }
 .dialog-head {
@@ -555,21 +621,13 @@ dialog::backdrop {
 }
 .about-tech {
   margin: 14px 0;
-  padding-left: 18px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
-.about-tech li {
-  margin-bottom: 6px;
-}
-.inspector-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 30px;
-  min-width: 0;
-}
-.inspector-grid > div {
-  min-width: 0;
+#object-details {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
 }
 #inspector-canvas {
   width: 100%;
@@ -581,7 +639,7 @@ dl {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 6px 15px;
-  font-size: 11px;
+  font-size: 12px;
 }
 dt {
   color: var(--muted);
@@ -596,7 +654,7 @@ dd {
   margin-top: 20px;
 }
 #source-link {
-  font-size: 11px;
+  font-size: 12px;
 }
 *[hidden] {
   display: none !important;
@@ -629,7 +687,7 @@ dd {
     align-items: start;
   }
   .mosaic-header button {
-    font-size: 10px;
+    font-size: 11px;
     padding: 7px 8px;
   }
   .export-row > span {
@@ -642,13 +700,13 @@ dd {
     padding: 0 20px;
   }
   .wordmark {
-    font-size: 22px;
+    font-size: 24px;
   }
   .wordmark .logo {
     height: 30px;
   }
   .source-link {
-    font-size: 10px;
+    font-size: 11px;
   }
   main {
     display: block;
@@ -665,7 +723,7 @@ dd {
     gap: 10px;
   }
   h2 {
-    font-size: 22px;
+    font-size: 24px;
   }
   .mosaic-header button {
     max-width: 155px;
@@ -680,12 +738,6 @@ dd {
   .export-row button {
     min-height: 44px;
   }
-  .inspector-grid {
-    display: block;
-  }
-  .inspector-grid > div + div {
-    margin-top: 20px;
-  }
   dialog {
     padding: 18px;
   }
@@ -694,16 +746,16 @@ dd {
     min-height: 44px;
   }
   .credit {
-    font-size: 11px;
-  }
-  .hint {
     font-size: 12px;
   }
+  .hint {
+    font-size: 13px;
+  }
   .section-label {
-    font-size: 10px;
+    font-size: 11px;
   }
   .channel-legend {
-    font-size: 11px;
+    font-size: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

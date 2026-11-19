@@ -111,7 +111,7 @@ export function exportNotes(notes: VoiceNote[]): string {
 /** Transaction completion, not request success, is the durable-write boundary. */
 export class NotesStore {
   private opening?: Promise<IDBDatabase>;
-  constructor(private readonly name = 'musivarium-voice-notes') {}
+  constructor(private readonly name = 'cytorecorder-voice-notes') {}
 
   private open(): Promise<IDBDatabase> {
     return (this.opening ??= new Promise<IDBDatabase>((resolve, reject) => {

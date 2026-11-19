@@ -54,4 +54,4 @@ class VoicePCMProcessor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('musivarium-voice-pcm', VoicePCMProcessor);
+registerProcessor('cytorecorder-voice-pcm', VoicePCMProcessor);

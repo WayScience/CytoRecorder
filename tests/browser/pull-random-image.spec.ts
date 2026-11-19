@@ -33,9 +33,11 @@ test('pulling an image discovers a new study outside the three examples and runs
   expect(source).toContain('/S-BIAD2258/');
   expect(queries.length).toBeGreaterThan(0);
   expect(new URL(queries[0]).searchParams.getAll('facet.accession_id.not')).toContain('S-BIAD3204');
-  await expect(page.locator('#image-biology')).toContainText(
+  await expect(page.locator('#image-biology')).toContainText('Archive specimen: Plankton');
+  await expect(page.locator('#image-biology')).not.toContainText(
     'marine plankton environmental sample',
   );
+  await expect(page.locator('#image-biology')).not.toContainText('Organism');
   await expect(page.locator('#image-biology')).toContainText('CC BY 4.0');
   const run = JSON.parse((await page.locator('#run-details').textContent())!);
   expect(run.cell_count).toBeGreaterThan(0);
