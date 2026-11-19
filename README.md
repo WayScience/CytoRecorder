@@ -1,4 +1,6 @@
-# musivarium
+# CytoRecorder
+
+<img src="https://raw.githubusercontent.com/WayScience/musivarium/main/public/cytorecorder.png" alt="CytoRecorder logo" width="360" />
 
 A browser-only microscopy explorer: sample a 2D region, find labelled objects, and inspect a reproducible mosaic of single-object crops. No application backend, volume rendering, or Z projection.
 

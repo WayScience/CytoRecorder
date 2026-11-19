@@ -55,14 +55,19 @@ a {
   margin: 0 auto;
 }
 .wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: -16px;
   font-size: 25px;
   letter-spacing: -1px;
   font-weight: 600;
   text-decoration: none;
 }
-.mark {
-  color: var(--accent);
-  padding-left: 12px;
+.wordmark .logo {
+  height: 36px;
+  width: auto;
+  display: block;
 }
 .about-toggle {
   background: transparent;
@@ -638,6 +643,9 @@ dd {
   }
   .wordmark {
     font-size: 22px;
+  }
+  .wordmark .logo {
+    height: 30px;
   }
   .source-link {
     font-size: 10px;

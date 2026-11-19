@@ -24,8 +24,9 @@ test('header links align with the main viewing window width on wide screens', as
         overflow: document.documentElement.scrollWidth > innerWidth,
       };
     });
-    // The wordmark's left edge matches the viewing window's left content edge.
-    expect(box.wordmark.left).toBeCloseTo(box.content.left, 2);
+    // The wordmark's left edge sits 16px left of the viewing window's left
+    // content edge (intentional logo offset).
+    expect(box.wordmark.left).toBeCloseTo(box.content.left - 16, 2);
     expect(box.content.left).toBeCloseTo(box.mosaic.left, 2);
     // The rightmost header link's right edge matches the right content edge.
     expect(Math.max(box.sourceLink.right, box.aboutToggle.right)).toBeCloseTo(box.mosaic.right, 2);
