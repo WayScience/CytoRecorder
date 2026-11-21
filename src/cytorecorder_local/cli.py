@@ -4,50 +4,43 @@ CLI for cytorecorder_local
 
 import fire
 
-from cytorecorder_local.main import DEFAULT_APP_URL, DEFAULT_CATEGORIES, serve
+from cytorecorder_local.main import DEFAULT_APP_URL, review
 
 
 class cytorecorder_localCLI:
-    def serve(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
+    def review(
         self,
         input_dir: str,
         output_dir: str,
         project: str = "",
-        port: int = 8765,
-        categories: str = ",".join(DEFAULT_CATEGORIES),
         app_url: str = DEFAULT_APP_URL,
         open_browser: bool = True,
     ) -> None:
         """
-        Serve a local folder of whole PNG/TIFF images (recursively,
-        including subdirectories) to CytoRecorder's whole-image quality
-        annotation workflow, and write exported quality labels to disk.
+        Help a human complete a CytoRecorder whole-image quality review:
+        confirms real images exist under input_dir (recursively, including
+        subdirectories) and opens the hosted CytoRecorder app. The human
+        then drags input_dir into the app themselves and, when done,
+        exports quality_labels.csv into output_dir from the browser.
 
         Args:
             input_dir (str):
                 Folder of whole images to review, scanned recursively.
             output_dir (str):
-                Folder the exported quality_labels.csv is written into.
+                Folder to save the exported quality_labels.csv into.
             project (str):
                 Project name recorded on every label.
                 Defaults to the input folder's own name.
-            port (int):
-                Local port to bind. Defaults to 8765.
-            categories (str):
-                Comma-separated QC categories offered in the browser.
-                Defaults to 'Good,Out-of-focus,Debris'.
             app_url (str):
-                Base URL of the CytoRecorder app to point at this server.
+                Base URL of the hosted CytoRecorder app to open.
             open_browser (bool):
                 Whether to open the system browser automatically.
                 Defaults to True.
         """
-        serve(
+        review(
             input_dir=input_dir,
             output_dir=output_dir,
             project=project,
-            port=port,
-            categories=categories,
             app_url=app_url,
             open_browser=open_browser,
         )

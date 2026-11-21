@@ -33,17 +33,16 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from cytorecorder_local import prepare
+from cytorecorder_local import review
 
-# build a small sample image folder and show how `prepare` discovers it
+# build a small sample image folder and show how `review` discovers it,
+# builds the CytoRecorder URL, and prints the steps for a human to finish
+# the run in the browser (open_browser=False so this notebook stays quiet)
 with TemporaryDirectory() as tmp:
     input_dir = Path(tmp) / "images"
     (input_dir / "plate1").mkdir(parents=True)
     (input_dir / "plate1" / "well_a1.png").write_bytes(
         b"not a real png, for discovery only"
     )
-    server, url, image_count = prepare(
-        str(input_dir), str(Path(tmp) / "output"), port=0
-    )
-    server.shutdown()
-    print(f"Discovered {image_count} image(s); CytoRecorder URL: {url}")
+    url = review(str(input_dir), str(Path(tmp) / "output"), open_browser=False)
+    print(f"CytoRecorder URL to open: {url}")

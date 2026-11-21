@@ -1,8 +1,11 @@
 """
-Launches the local server and builds the CytoRecorder URL that points the
-browser app at it — "sending the browser config details like input and
-output folders" from the issue, since a URL cannot grant filesystem access
-but can carry where to fetch images from and where to POST exports to.
+Helps a human complete a CytoRecorder whole-image QC review run: discovers
+the images under a local folder (recursively) and opens the hosted
+GitHub Pages app so a person can drag that folder in, review and label the
+images there, and export the resulting CSV into the output folder
+themselves. No local HTTP server, no network upload of the images — the
+images never leave the machine except through the browser's own existing
+local-folder upload, which already runs entirely client-side.
 """
 
 from __future__ import annotations
@@ -12,131 +15,92 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from cytorecorder_local.images import discover_images
-from cytorecorder_local.server import ThreadingHTTPServer, build_server
 
 DEFAULT_APP_URL = "https://wayscience.github.io/musivarium/"
-DEFAULT_CATEGORIES = ("Good", "Out-of-focus", "Debris")
 
 
-def build_app_url(app_url: str, port: int, project: str) -> str:
+def build_app_url(app_url: str, project: str) -> str:
     """
-    Builds the CytoRecorder URL that drives this run: `manifest` points the
-    browser at the recursively discovered image list, `export` is where its
-    "Export quality labels (CSV)" button also POSTs so the table lands on
-    disk under the configured output folder, not only as a browser download.
+    Builds the CytoRecorder URL to open, carrying only the project name
+    (prefilled into the whole-image QC panel's Project field) — there is no
+    server behind this URL to fetch images from or export to.
 
     Args:
         app_url (str):
-            Base URL of the hosted (or locally served) CytoRecorder app.
-        port (int):
-            Port this local server is bound to.
+            Base URL of the hosted CytoRecorder app.
         project (str):
-            Project name shown in the browser and recorded on every label.
+            Project name to prefill in the browser.
 
     Returns:
         str:
             The full CytoRecorder URL to open.
     """
 
-    base = f"http://127.0.0.1:{port}"
-    query = urlencode(
-        {
-            "manifest": f"{base}/manifest.json",
-            "export": f"{base}/export",
-            "project": project,
-        }
-    )
-    return f"{app_url.rstrip('/')}/?{query}"
+    if not project:
+        return app_url
+    return f"{app_url.rstrip('/')}/?{urlencode({'project': project})}"
 
 
-def prepare(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
+def review(
     input_dir: str,
     output_dir: str,
     project: str = "",
-    port: int = 8765,
-    categories: str = ",".join(DEFAULT_CATEGORIES),
     app_url: str = DEFAULT_APP_URL,
-) -> tuple[ThreadingHTTPServer, str, int]:
+    open_browser: bool = True,
+) -> str:
     """
-    Builds (but does not run) the local server and the URL to open.
+    Validates the input folder, prints the steps a human takes to complete
+    the review in the browser, and (by default) opens CytoRecorder.
 
     Args:
         input_dir (str):
             Folder of whole images to review; scanned recursively for
-            ``.png``/``.tif``/``.tiff`` files.
+            ``.png``/``.tif``/``.tiff`` files to confirm there is something
+            to review before opening a browser tab.
         output_dir (str):
-            Folder the exported ``quality_labels.csv`` is written into.
+            Folder the human should save the exported quality_labels.csv
+            into, from the browser's "Export quality labels (CSV)" button.
         project (str):
             Project name; defaults to the input folder's own name.
-        port (int):
-            Local port to bind.
-        categories (str):
-            Comma-separated QC categories offered in the browser.
         app_url (str):
-            Base URL of the CytoRecorder app to point at this server.
-
-    Returns:
-        tuple[ThreadingHTTPServer, str, int]:
-            The constructed (not yet started) server, the URL to open, and
-            the number of images discovered.
-    """
-
-    category_list = [c.strip() for c in categories.split(",") if c.strip()]
-    project_name = project or Path(input_dir).name
-    image_count = len(discover_images(input_dir))
-    server = build_server(
-        Path(input_dir), Path(output_dir), project_name, category_list, port
-    )
-    url = build_app_url(app_url, port, project_name)
-    return server, url, image_count
-
-
-def serve(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
-    input_dir: str,
-    output_dir: str,
-    project: str = "",
-    port: int = 8765,
-    categories: str = ",".join(DEFAULT_CATEGORIES),
-    app_url: str = DEFAULT_APP_URL,
-    open_browser: bool = True,
-) -> None:
-    """
-    Starts the local server and, by default, opens CytoRecorder pointed at
-    it. Blocks (serving requests) until interrupted with Ctrl+C.
-
-    Args:
-        input_dir (str):
-            Folder of whole images to review, scanned recursively.
-        output_dir (str):
-            Folder the exported ``quality_labels.csv`` is written into.
-        project (str):
-            Project name; defaults to the input folder's own name.
-        port (int):
-            Local port to bind.
-        categories (str):
-            Comma-separated QC categories offered in the browser.
-        app_url (str):
-            Base URL of the CytoRecorder app to point at this server.
+            Base URL of the hosted CytoRecorder app to open.
         open_browser (bool):
             Whether to open the system browser automatically.
+
+    Returns:
+        str:
+            The CytoRecorder URL that was (or would be) opened.
     """
 
-    server, url, image_count = prepare(
-        input_dir, output_dir, project, port, categories, app_url
-    )
+    image_count = len(discover_images(input_dir))
+    if image_count == 0:
+        raise FileNotFoundError(
+            f"No PNG/TIFF images found under {input_dir} (recursively)."
+        )
+    project_name = project or Path(input_dir).name
     output_path = Path(output_dir) / "quality_labels.csv"
+    url = build_app_url(app_url, project_name)
     # flush=True: stdout is fully buffered (not line-buffered) once it is a
     # pipe rather than a terminal, so a caller reading these lines live
-    # (e.g. a wrapper script, or this package's own CLI tests) would
-    # otherwise block waiting on data still sitting in this process's buffer.
-    print(f"Serving {image_count} image(s) from {input_dir}", flush=True)
-    print(f"Quality labels will be written to {output_path}", flush=True)
-    print(f"Open: {url}", flush=True)
+    # (e.g. this package's own CLI tests) would otherwise block waiting on
+    # data still sitting in this process's buffer.
+    print(f"Found {image_count} image(s) under {input_dir} (recursively).", flush=True)
+    print(f"1. Open: {url}", flush=True)
+    print(
+        f"2. In CytoRecorder, drag the folder {input_dir} onto the mosaic", flush=True
+    )
+    print(
+        "   (or use its Upload folder button) and switch to Single image mode.",
+        flush=True,
+    )
+    print(
+        "3. Review and label each image with the whole-image quality buttons.",
+        flush=True,
+    )
+    print(
+        f"4. Click 'Export quality labels (CSV)' and save it to {output_path}.",
+        flush=True,
+    )
     if open_browser:
         webbrowser.open(url)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.shutdown()
+    return url

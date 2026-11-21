@@ -1,6 +1,6 @@
 # cytorecorder-local
 
-Local companion CLI for CytoRecorder/Musivarium: serves a folder of whole microscopy images (recursively) to the browser app's whole-image QC workflow and writes exported quality labels to an output folder.
+Local companion CLI for CytoRecorder/Musivarium: confirms a folder of whole microscopy images exists (recursively) and opens the hosted CytoRecorder app so a human can complete the whole-image QC review and export themselves.
 
 ## High-level overview
 
