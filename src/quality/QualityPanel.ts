@@ -161,14 +161,46 @@ export class QualityPanel {
 
   private async exportCsv(): Promise<void> {
     try {
-      const all = await this.store.list();
-      download(
-        new TextEncoder().encode(exportQualityLabelsCsv(all)),
-        'quality-labels.csv',
-        'text/csv',
-      );
+      const all = await this.store.list(),
+        csv = exportQualityLabelsCsv(all),
+        bytes = new TextEncoder().encode(csv);
+      if (await this.saveViaPicker(bytes, all.length)) return;
+      download(bytes, 'quality-labels.csv', 'text/csv');
     } catch (e) {
       this.statusEl.textContent = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  /** File System Access API: a native Save-As dialog with a suggested
+   * filename, so exporting lands directly where the person picks (e.g. the
+   * `cytorecorder-local review` CLI's printed output folder) with no
+   * separate move-from-Downloads step. Returns false (never throws) when
+   * the API is unavailable (Firefox, older Safari) so the caller falls back
+   * to the plain download; a user-cancelled picker also counts as handled,
+   * not a failure, since nothing was supposed to be written. */
+  private async saveViaPicker(bytes: Uint8Array, count: number): Promise<boolean> {
+    const picker = (
+      window as Window & {
+        showSaveFilePicker?: (options: {
+          suggestedName: string;
+          types: { description: string; accept: Record<string, string[]> }[];
+        }) => Promise<FileSystemFileHandle>;
+      }
+    ).showSaveFilePicker;
+    if (!picker) return false;
+    try {
+      const handle = await picker({
+        suggestedName: 'quality_labels.csv',
+        types: [{ description: 'CSV', accept: { 'text/csv': ['.csv'] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(new Uint8Array(bytes));
+      await writable.close();
+      this.statusEl.textContent = `Saved ${count} quality label(s) to ${handle.name}.`;
+      return true;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return true; // user cancelled
+      return false; // any other failure: fall back to a plain download
     }
   }
 
