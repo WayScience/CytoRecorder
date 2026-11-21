@@ -1,0 +1,46 @@
+---
+# used for publishing cytorecorder-local packages to pypi on release.
+# scoped by tag prefix so a future, unrelated GitHub Release for the
+# browser app (which currently deploys continuously via pages.yml and
+# does not use releases) could never accidentally trigger a PyPI publish.
+name: publish cytorecorder-local to pypi
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  publish_pypi:
+    if: startsWith(github.event.release.tag_name, 'cytorecorder-local-v')
+    runs-on: ubuntu-24.04
+    environment: release
+    defaults:
+      run:
+        working-directory: cytorecorder-local
+    permissions:
+      contents: read
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch tags
+        run: git fetch --all --tags
+      - name: Python setup
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          enable-cache: false
+      - name: uv build distribution content
+        run: uv build
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@aef6c9b6e301dc803e1bc9133e9ce67ae9b0906b # v1.14.3
+        with:
+          packages-dir: cytorecorder-local/dist

@@ -55,7 +55,13 @@ where = [ "src" ]
 include = [ "cytorecorder_local*" ]
 
 [tool.setuptools_scm]
-root = "."
+# This package now lives as a subdirectory of the WayScience/CytoRecorder
+# monorepo rather than its own git root, so point setuptools-scm at the
+# actual repo root and scope tag parsing to this package's own release
+# tags (e.g. "cytorecorder-local-v0.1.0") so unrelated repo tags never
+# affect this package's computed version.
+root = ".."
+tag_regex = "^cytorecorder-local-v(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+.*)$"
 version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"
 version_file = "src/cytorecorder_local/_version.py"

@@ -16,7 +16,7 @@ from urllib.parse import urlencode
 
 from cytorecorder_local.images import discover_images
 
-DEFAULT_APP_URL = "https://wayscience.github.io/musivarium/"
+DEFAULT_APP_URL = "https://wayscience.github.io/CytoRecorder/"
 
 
 def build_app_url(app_url: str, project: str) -> str:

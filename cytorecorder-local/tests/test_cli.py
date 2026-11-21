@@ -62,7 +62,7 @@ def test_review_cli_discovers_real_images_and_prints_the_steps_to_open(
     )
     combined = output.stdout + output.stderr
     assert "Found 1 image(s)" in combined
-    assert "Open: https://wayscience.github.io/musivarium/?project=images" in combined
+    assert "Open: https://wayscience.github.io/CytoRecorder/?project=images" in combined
     assert str(tmp_path / "out" / "quality_labels.csv") in combined
 
 

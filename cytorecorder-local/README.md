@@ -1,50 +1,34 @@
 # cytorecorder-local
 
-Local companion CLI for CytoRecorder/Musivarium: confirms a folder of whole microscopy images exists (recursively) and opens the hosted CytoRecorder app so a human can complete the whole-image QC review and export themselves.
+Local companion CLI for [CytoRecorder](https://wayscience.github.io/CytoRecorder/): confirms a folder of whole microscopy images exists (recursively, including subdirectories) and opens the hosted CytoRecorder app so a human can complete a whole-image quality review and export the results themselves.
 
-## High-level overview
+This CLI does not run a server and does not push data into the browser. A human still drags the input folder into CytoRecorder (or uses its "Upload folder" button) and, when finished, saves the exported `quality_labels.csv` into the output folder themselves. Browsers cannot be made to silently read or write arbitrary local paths, so this stays a manual, two-step handoff by design.
 
-This template gives you a ready-to-run Python research software project with:
+## Install
 
-- `uv`-managed environments and dependencies
-- Testing and coverage defaults via `pytest` + `coverage.py`
-- Pre-commit automation for formatting, linting, and type checks
-- GitHub Actions workflows for linting, tests, docs, and release-related automation
-- Starter package + CLI scaffold under `src/`
-- Documentation scaffold under `docs/`
-- Poe task entrypoints for common local workflows (including a full local pipeline task)
+```sh
+pip install cytorecorder-local
+```
 
-## Included agent skills
+## Use
 
-This project includes agent guidance in `.agents/skills/` with common skills for:
+```sh
+cytorecorder-local review --input_dir=/path/to/images --output_dir=/path/to/results
+```
 
-- Test-driven development
-- Incremental implementation
-- Code review and quality checks
-- CI/CD and automation workflow alignment
-- Targeted correctness properties and honest verification reports (`formal-verification`)
-- Debugging and error recovery
-- Optional learning exercises (`learning-opportunities`)
-- Simplified Technical English (ASD-STE100) writing checks (`simple-english`)
+This:
 
-If you do not want to use local agent guidance in your project, remove `AGENTS.md` and the `.agents/` directory.
+1. Scans `input_dir` recursively for `.png`/`.tif`/`.tiff` files and fails fast if none are found.
+1. Refuses (unless `--force=True`) if `output_dir/quality_labels.csv` already exists and is non-empty, so a review run can't silently clobber a previous export.
+1. Opens the hosted CytoRecorder app at a URL carrying a project name (defaulting to `input_dir`'s own folder name).
+1. Prints the remaining manual steps: drag `input_dir` into the app, switch to Single image mode, label each image, then export the CSV into `output_dir`.
 
-## Post template copy instructions
+Run `cytorecorder-local review --help` for all options (`--project`, `--app_url`, `--open_browser`, `--force`).
 
-While we provide some customizations to the files in this template based on your specification there's likely a chance some things aren't perfect.
-We recommend taking a look at each file used within this template to ensure it meets your expectations for the project you're working on.
-In addition, consider the following steps to help ensure the project is in good shape before proceeding too far.
+## Develop
 
-- [ ] Remove files you plan on not using (e.g. `src/notebooks`, `.github/workflows/publish-pypi.yml`, etc.).
-- [ ] Update the `LICENSE` file based on the project.
-- [ ] Update the `CITATION.cff` file based on the project.
-- [ ] Update `.github/CODEOWNERS` with the right GitHub handle(s) for review ownership, and expand it to additional owners/teams and path-specific ownership rules as the project grows.
-- [ ] Update the project dependencies using `uv remove` or `uv add`.
-- [ ] Update the `pyproject.toml` file based on the project.
-- [ ] Enable `pre-commit-lite` to help automate corrections to code during pull request updates. Otherwise, consider removing the step: labeled with: `pre-commit-ci/lite-action` within `.github/workflows/run-tests.yml`.
-- [ ] Enable private security vulnerability issue reporting within the repo settings (e.g. https://github.com/repo_org/repo_name/settings/security_analysis)
-- [ ] Enable [branch protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule) to require one pull request review approval per pull request to help with maintainer expectations.
-- [ ] Add collaborators to access the repository.
-- [ ] Create a `pages` branch and enable GitHub Pages on the repository (for documentation).
-- [ ] Update the GitHub repository description.
-- [ ] Remove these instructions!
+```sh
+uv sync
+uv run --frozen pytest
+uv run pre-commit run --all-files
+```

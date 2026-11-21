@@ -43,6 +43,12 @@ CSV/Parquet exports include completed features and model/preprocessing provenanc
 
 Recording a voice note terminates the feature worker immediately; closing voice notes resumes unfinished crops unless you manually paused them. Changing images cancels the previous queue and rejects its late results. See [model transforms, verification and limits](docs/morphem-features.md).
 
+## Local whole-image quality review
+
+Single image mode (toggle beside the mosaic) switches from per-object crops to the whole loaded image, for PNG/TIFF files and OME-Zarr sources alike, so a reviewer can label the whole frame rather than individual objects: Good, Out-of-focus, or Debris. Labels persist per annotator and export to a `quality_labels.csv`.
+
+[`cytorecorder-local`](cytorecorder-local/) is an optional local CLI that scans a folder of images recursively and opens this app for that review — see [its docs](docs/cytorecorder-local.md).
+
 ## Included real datasets
 
 - **BIA S-BIAD3204 / RING_Rep2:** the default fixed reference, discovered through the BIA API. Confocal microscopy of heat-stressed human U2OS G3BP1/2-knockout cells expressing G3BP1-mCherry and a GFP-MKRN2 RING variant. Three channels: mCher-T1 (G3BP1), EGFP-T2 (GFP-MKRN2), and DAPI-T3 (nuclei). Amzallag et al., CC0. The 359 × 359 level-2 preview uses DAPI for exploratory StarDist nuclei predictions, not whole-cell or granule segmentation. The beta search API is not needed at runtime. See [API discovery, biology and qualification](docs/bia-reference.md).
