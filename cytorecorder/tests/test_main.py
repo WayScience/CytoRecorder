@@ -52,6 +52,30 @@ def test_review_defaults_the_project_name_to_the_input_folder_name(
     assert "project=my-plate" in url
 
 
+def test_review_resolves_a_dot_input_dir_to_the_real_folder_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    input_dir = tmp_path / "my-plate"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    monkeypatch.chdir(input_dir)
+    url = review(".", str(tmp_path / "out"), open_browser=False)
+    assert "project=my-plate" in url
+
+
+def test_review_resolves_a_dotdot_input_dir_to_the_real_parent_folder_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    input_dir = tmp_path / "my-plate"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    nested = input_dir / "sub"
+    nested.mkdir()
+    monkeypatch.chdir(nested)
+    url = review("..", str(tmp_path / "out"), open_browser=False)
+    assert "project=my-plate" in url
+
+
 def test_review_respects_an_explicit_project_override(tmp_path: Path) -> None:
     input_dir = tmp_path / "my-plate"
     input_dir.mkdir()

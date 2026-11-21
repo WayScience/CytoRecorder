@@ -100,7 +100,12 @@ def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
         raise FileNotFoundError(
             f"No PNG/TIFF images found under {input_dir} (recursively)."
         )
-    project_name = project or Path(input_dir).name
+    # .resolve() first: Path(".").name and Path("..").name are "" and ".."
+    # respectively (pathlib treats them as literal path segments, not the
+    # real directory they refer to), which would silently make the CLI's
+    # own project-hint suppression mechanism never kick in for "review
+    # --input_dir=. ...".
+    project_name = project or Path(input_dir).resolve().name
     output_path = Path(output_dir) / "quality_labels.csv"
     if output_path.exists() and output_path.stat().st_size > 0 and not force:
         raise FileExistsError(
