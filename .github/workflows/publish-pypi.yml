@@ -1,9 +1,9 @@
 ---
-# used for publishing cytorecorder-local packages to pypi on release.
+# used for publishing cytorecorder packages to pypi on release.
 # scoped by tag prefix so a future, unrelated GitHub Release for the
 # browser app (which currently deploys continuously via pages.yml and
 # does not use releases) could never accidentally trigger a PyPI publish.
-name: publish cytorecorder-local to pypi
+name: publish cytorecorder to pypi
 
 on:
   release:
@@ -12,12 +12,12 @@ on:
 
 jobs:
   publish_pypi:
-    if: startsWith(github.event.release.tag_name, 'cytorecorder-local-v')
+    if: startsWith(github.event.release.tag_name, 'cytorecorder-v')
     runs-on: ubuntu-24.04
     environment: release
     defaults:
       run:
-        working-directory: cytorecorder-local
+        working-directory: cytorecorder
     permissions:
       contents: read
       # IMPORTANT: this permission is mandatory for trusted publishing
@@ -43,4 +43,4 @@ jobs:
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@aef6c9b6e301dc803e1bc9133e9ce67ae9b0906b # v1.14.3
         with:
-          packages-dir: cytorecorder-local/dist
+          packages-dir: cytorecorder/dist

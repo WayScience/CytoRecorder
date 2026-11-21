@@ -35,12 +35,12 @@ jobs:
       - run: npm run test:browser
       - run: npm run test:static
       - run: npm audit --audit-level=moderate
-  cytorecorder-local:
+  cytorecorder:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:
-        working-directory: cytorecorder-local
+        working-directory: cytorecorder
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:

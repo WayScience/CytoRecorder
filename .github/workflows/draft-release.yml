@@ -1,15 +1,15 @@
 ---
-# workflow for drafting releases on GitHub, scoped to the cytorecorder-local
+# workflow for drafting releases on GitHub, scoped to the cytorecorder
 # companion CLI (see .github/release-drafter.yml). The browser app deploys
 # continuously via pages.yml on every push and does not use releases.
-name: cytorecorder-local release drafter
+name: cytorecorder release drafter
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'cytorecorder-local/**'
+      - 'cytorecorder/**'
 
 jobs:
   draft_release:

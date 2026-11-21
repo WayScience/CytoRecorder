@@ -33,7 +33,7 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from cytorecorder_local import review
+from cytorecorder import review
 
 # build a small sample image folder and show how `review` discovers it,
 # builds the CytoRecorder URL, and prints the steps for a human to finish

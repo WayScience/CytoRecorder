@@ -1,13 +1,13 @@
 ---
 # template configuration for release-drafter
 # see: https://github.com/release-drafter/release-drafter
-# Scoped to the cytorecorder-local companion CLI's own PyPI release stream,
+# Scoped to the cytorecorder companion CLI's own PyPI release stream,
 # not the browser app (which deploys continuously via Pages on every push
 # to main and does not use GitHub Releases). See
 # .github/workflows/draft-release.yml for the matching path filter and
-# cytorecorder-local/pyproject.toml's tag_regex for the version parser.
-name-template: 'cytorecorder-local v$RESOLVED_VERSION'
-tag-template: 'cytorecorder-local-v$RESOLVED_VERSION'
+# cytorecorder/pyproject.toml's tag_regex for the version parser.
+name-template: 'cytorecorder v$RESOLVED_VERSION'
+tag-template: 'cytorecorder-v$RESOLVED_VERSION'
 version-resolver:
   major:
     labels:

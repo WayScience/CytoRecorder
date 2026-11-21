@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cytorecorder_local.images import discover_images
+from cytorecorder.images import discover_images
 
 
 @pytest.fixture

@@ -14,7 +14,7 @@ import webbrowser
 from pathlib import Path
 from urllib.parse import urlencode
 
-from cytorecorder_local.images import discover_images
+from cytorecorder.images import discover_images
 
 DEFAULT_APP_URL = "https://wayscience.github.io/CytoRecorder/"
 

@@ -118,7 +118,7 @@ test('a local folder of PNG/TIFF images (including a subdirectory) opens as a st
   await expect(page.locator('#image-prev')).toBeDisabled();
 });
 
-test('a ?project= URL param (as opened by the cytorecorder-local review CLI) prefills the Project field', async ({
+test('a ?project= URL param (as opened by the cytorecorder review CLI) prefills the Project field', async ({
   page,
   context,
 }) => {

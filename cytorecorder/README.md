@@ -1,4 +1,4 @@
-# cytorecorder-local
+# cytorecorder
 
 Local companion CLI for [CytoRecorder](https://wayscience.github.io/CytoRecorder/): confirms a folder of whole microscopy images exists (recursively, including subdirectories) and opens the hosted CytoRecorder app so a human can complete a whole-image quality review and export the results themselves.
 
@@ -7,13 +7,13 @@ This CLI does not run a server and does not push data into the browser. A human 
 ## Install
 
 ```sh
-pip install cytorecorder-local
+pip install cytorecorder
 ```
 
 ## Use
 
 ```sh
-cytorecorder-local review --input_dir=/path/to/images --output_dir=/path/to/results
+cytorecorder review --input_dir=/path/to/images --output_dir=/path/to/results
 ```
 
 This:
@@ -23,7 +23,7 @@ This:
 1. Opens the hosted CytoRecorder app at a URL carrying a project name (defaulting to `input_dir`'s own folder name).
 1. Prints the remaining manual steps: drag `input_dir` into the app, switch to Single image mode, label each image, then export the CSV into `output_dir`.
 
-Run `cytorecorder-local review --help` for all options (`--project`, `--app_url`, `--open_browser`, `--force`).
+Run `cytorecorder review --help` for all options (`--project`, `--app_url`, `--open_browser`, `--force`).
 
 ## Develop
 

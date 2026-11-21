@@ -47,7 +47,7 @@ Recording a voice note terminates the feature worker immediately; closing voice 
 
 Single image mode (toggle beside the mosaic) switches from per-object crops to the whole loaded image, for PNG/TIFF files and OME-Zarr sources alike, so a reviewer can label the whole frame rather than individual objects: Good, Out-of-focus, or Debris. Labels persist per annotator and export to a `quality_labels.csv`.
 
-[`cytorecorder-local`](cytorecorder-local/) is an optional local CLI that scans a folder of images recursively and opens this app for that review — see [its docs](docs/cytorecorder-local.md).
+[`cytorecorder`](cytorecorder/) is an optional local CLI that scans a folder of images recursively and opens this app for that review — see [its docs](docs/cytorecorder.md).
 
 ## Included real datasets
 

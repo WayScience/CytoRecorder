@@ -18,7 +18,7 @@ def test_review_cli_surfaces_a_clear_error_for_an_image_free_input_dir(
         [
             "uv",
             "run",
-            "cytorecorder-local",
+            "cytorecorder",
             "review",
             f"--input_dir={empty_input}",
             f"--output_dir={tmp_path / 'out'}",
@@ -49,7 +49,7 @@ def test_review_cli_discovers_real_images_and_prints_the_steps_to_open(
         [
             "uv",
             "run",
-            "cytorecorder-local",
+            "cytorecorder",
             "review",
             f"--input_dir={input_dir}",
             f"--output_dir={tmp_path / 'out'}",
@@ -80,7 +80,7 @@ def test_review_cli_refuses_and_can_be_forced_past_an_existing_csv(
         [
             "uv",
             "run",
-            "cytorecorder-local",
+            "cytorecorder",
             "review",
             f"--input_dir={input_dir}",
             f"--output_dir={output_dir}",
@@ -98,7 +98,7 @@ def test_review_cli_refuses_and_can_be_forced_past_an_existing_csv(
         [
             "uv",
             "run",
-            "cytorecorder-local",
+            "cytorecorder",
             "review",
             f"--input_dir={input_dir}",
             f"--output_dir={output_dir}",

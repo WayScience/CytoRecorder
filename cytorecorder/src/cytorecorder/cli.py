@@ -1,13 +1,13 @@
 """
-CLI for cytorecorder_local
+CLI for cytorecorder
 """
 
 import fire
 
-from cytorecorder_local.main import DEFAULT_APP_URL, review
+from cytorecorder.main import DEFAULT_APP_URL, review
 
 
-class cytorecorder_localCLI:
+class cytorecorderCLI:
     def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
         self,
         input_dir: str,
@@ -55,4 +55,4 @@ def trigger() -> None:
     """
     Trigger the CLI to run.
     """
-    fire.Fire(cytorecorder_localCLI)
+    fire.Fire(cytorecorderCLI)

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cytorecorder_local.main import build_app_url, review
+from cytorecorder.main import build_app_url, review
 
 
 def test_build_app_url_carries_only_the_project_name() -> None:

@@ -415,7 +415,7 @@ toml = [
 ]
 
 [[package]]
-name = "cytorecorder-local"
+name = "cytorecorder"
 source = { editable = "." }
 dependencies = [
     { name = "fire" },

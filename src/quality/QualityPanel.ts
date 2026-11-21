@@ -79,7 +79,7 @@ export class QualityPanel {
     this.updateButtonStates();
   }
 
-  /** Lets the companion `cytorecorder-local review` CLI's `?project=` URL
+  /** Lets the companion `cytorecorder review` CLI's `?project=` URL
    * param prefill the field before any image is even loaded, without
    * clobbering a value the person already typed or had saved locally. */
   prefillProject(name: string): void {
@@ -173,7 +173,7 @@ export class QualityPanel {
 
   /** File System Access API: a native Save-As dialog with a suggested
    * filename, so exporting lands directly where the person picks (e.g. the
-   * `cytorecorder-local review` CLI's printed output folder) with no
+   * `cytorecorder review` CLI's printed output folder) with no
    * separate move-from-Downloads step. Returns false (never throws) when
    * the API is unavailable (Firefox, older Safari) so the caller falls back
    * to the plain download; a user-cancelled picker also counts as handled,
