@@ -30,7 +30,20 @@
 # Clicking it applies the formatting to the notebook.
 
 # show an import from a local package
-from cytorecorder_local import show_message
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-# use the function within the notebook to show it works
-show_message("Hello, notebook!")
+from cytorecorder_local import prepare
+
+# build a small sample image folder and show how `prepare` discovers it
+with TemporaryDirectory() as tmp:
+    input_dir = Path(tmp) / "images"
+    (input_dir / "plate1").mkdir(parents=True)
+    (input_dir / "plate1" / "well_a1.png").write_bytes(
+        b"not a real png, for discovery only"
+    )
+    server, url, image_count = prepare(
+        str(input_dir), str(Path(tmp) / "output"), port=0
+    )
+    server.shutdown()
+    print(f"Discovered {image_count} image(s); CytoRecorder URL: {url}")
