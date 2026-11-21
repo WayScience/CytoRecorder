@@ -1,0 +1,50 @@
+# cytorecorder-local
+
+Local companion CLI for CytoRecorder/Musivarium: serves a folder of whole microscopy images (recursively) to the browser app's whole-image QC workflow and writes exported quality labels to an output folder.
+
+## High-level overview
+
+This template gives you a ready-to-run Python research software project with:
+
+- `uv`-managed environments and dependencies
+- Testing and coverage defaults via `pytest` + `coverage.py`
+- Pre-commit automation for formatting, linting, and type checks
+- GitHub Actions workflows for linting, tests, docs, and release-related automation
+- Starter package + CLI scaffold under `src/`
+- Documentation scaffold under `docs/`
+- Poe task entrypoints for common local workflows (including a full local pipeline task)
+
+## Included agent skills
+
+This project includes agent guidance in `.agents/skills/` with common skills for:
+
+- Test-driven development
+- Incremental implementation
+- Code review and quality checks
+- CI/CD and automation workflow alignment
+- Targeted correctness properties and honest verification reports (`formal-verification`)
+- Debugging and error recovery
+- Optional learning exercises (`learning-opportunities`)
+- Simplified Technical English (ASD-STE100) writing checks (`simple-english`)
+
+If you do not want to use local agent guidance in your project, remove `AGENTS.md` and the `.agents/` directory.
+
+## Post template copy instructions
+
+While we provide some customizations to the files in this template based on your specification there's likely a chance some things aren't perfect.
+We recommend taking a look at each file used within this template to ensure it meets your expectations for the project you're working on.
+In addition, consider the following steps to help ensure the project is in good shape before proceeding too far.
+
+- [ ] Remove files you plan on not using (e.g. `src/notebooks`, `.github/workflows/publish-pypi.yml`, etc.).
+- [ ] Update the `LICENSE` file based on the project.
+- [ ] Update the `CITATION.cff` file based on the project.
+- [ ] Update `.github/CODEOWNERS` with the right GitHub handle(s) for review ownership, and expand it to additional owners/teams and path-specific ownership rules as the project grows.
+- [ ] Update the project dependencies using `uv remove` or `uv add`.
+- [ ] Update the `pyproject.toml` file based on the project.
+- [ ] Enable `pre-commit-lite` to help automate corrections to code during pull request updates. Otherwise, consider removing the step: labeled with: `pre-commit-ci/lite-action` within `.github/workflows/run-tests.yml`.
+- [ ] Enable private security vulnerability issue reporting within the repo settings (e.g. https://github.com/repo_org/repo_name/settings/security_analysis)
+- [ ] Enable [branch protection rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule) to require one pull request review approval per pull request to help with maintainer expectations.
+- [ ] Add collaborators to access the repository.
+- [ ] Create a `pages` branch and enable GitHub Pages on the repository (for documentation).
+- [ ] Update the GitHub repository description.
+- [ ] Remove these instructions!
