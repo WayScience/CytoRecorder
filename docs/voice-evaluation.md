@@ -35,7 +35,7 @@ VOICE_CLIPS=synthetic-10-long-review-90s node scripts/benchmark-voice.mjs --reus
 
 Configuration:
 
-- `VOICE_EVIDENCE_DIR`: audio and run evidence directory; default is `$HOME/.hermes/cache/scratch/musivarium-voice-evaluation`.
+- `VOICE_EVIDENCE_DIR`: audio and run evidence directory; default is `$HOME/.hermes/cache/scratch/cytorecorder-voice-evaluation`.
 - `VOICE_PORT`: loopback Vite port, default **5197**; port 5183 is explicitly rejected to avoid another local verification server.
 - `VOICE_TIMEOUT_MS`: transcription deadline, default **180000** milliseconds per clip; cancellation terminates the real ASR worker. The browser launch is bounded at 30 seconds. Browser UI/navigation preparation has separate bounded waits.
 - `VOICE_CLIPS`: comma-separated exact IDs; any unknown ID fails validation. A subset is explicitly reported as partial.
@@ -76,7 +76,7 @@ The actual speech model was `onnx-community/whisper-tiny.en`, revision `794207fe
 
 ## Recorded run
 
-Final evidence: `$HOME/.hermes/cache/scratch/musivarium-voice-evaluation/run-2026-11-13T16-23-49-625Z/`.
+Final evidence was captured in local scratch in `run-2026-11-13T16-23-49-625Z/`; it is not checked in.
 
 - Start: **2026-11-13T16:23:49.627Z**; finish: **2026-11-13T16:24:58.494Z**.
 - Host: Apple M4 Pro, arm64, 12 logical CPUs, 51,539,607,552 physical-memory bytes; observed Darwin kernel 25.6.0; Node v26.7.0.

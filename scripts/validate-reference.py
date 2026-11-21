@@ -59,7 +59,7 @@ def source_bodies(manifest: dict, live: bool, cache: Path | None) -> dict[str, b
             for attempt in range(3):
                 try:
                     with requests.get(url, timeout=(10, 45), stream=True,
-                                      headers={"User-Agent": "Musivarium-scientific-validation/1"}) as response:
+                                      headers={"User-Agent": "CytoRecorder-scientific-validation/1"}) as response:
                         response.raise_for_status()
                         chunks, received = [], 0
                         for chunk in response.iter_content(64 * 1024):

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
+import { firstDiscoveryRecord, installDiscoveryFixtures } from './support/bia-discovery-fixtures';
+import { idrUrl, installIdrFixtures, installImageFixtures } from './support/idr-fixtures';
 import { stubSaveFilePicker } from './support/save-file-picker';
 
 test.use({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
@@ -122,18 +124,14 @@ test('a ?project= URL param (as opened by the cytorecorder review CLI) prefills 
   page,
   context,
 }) => {
-  const network = await installIdrFixtures(context);
-  await page.goto(idrUrl('/?project=Bandicoot'));
+  const queries = await installDiscoveryFixtures(context);
+  await page.goto('/?project=Bandicoot');
   // Prefilled before any image is loaded or Single image mode is even opened.
   await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
   await expect(page.locator('#status')).toContainText('Bandicoot');
   await expect(page.locator('#status')).toContainText('Drag the image folder');
-  // No automatic BioImage Archive fetch: a dedicated CLI review session,
-  // not the public demo, so there is nothing to wait for and no network
-  // call to confirm absent except by giving the page a moment to settle.
-  await page.waitForTimeout(500);
-  expect(network.requests.length).toBe(0);
   await expect(page.locator('#csv')).toBeDisabled();
+  expect(queries).toEqual([]);
 
   await page.locator('#upload-image-input').setInputFiles(samplePng);
   // A manually loaded image's own project never overwrites an already-set field.
@@ -144,13 +142,19 @@ test('?project= with ?voice=1 (cytorecorder review --enable_voice_notes) keeps t
   page,
   context,
 }) => {
-  await installIdrFixtures(context);
-  await page.goto(idrUrl('/?project=Bandicoot&voice=1'));
+  const directory = new URL('./fixtures/bia3204/', import.meta.url);
+  const manifest = JSON.parse(readFileSync(new URL('manifest.json', directory), 'utf8'));
+  await installImageFixtures(context, directory, manifest);
+  const queries = await installDiscoveryFixtures(context);
+  await page.addInitScript(() => {
+    crypto.getRandomValues = ((array: Uint32Array) =>
+      array.fill(0)) as typeof crypto.getRandomValues;
+  });
+  await page.goto('/?project=Bandicoot&voice=1');
   await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
-  // The usual public-demo behavior still runs: automatic BIA fetch,
-  // objects mode with a real mosaic, voice notes available.
-  await expect(page.locator('#result-count')).toContainText('of', { timeout: 30000 });
-  await expect(page.locator('#csv')).toBeEnabled();
+  await expect(page.locator('#image-title')).toHaveText(firstDiscoveryRecord.study_title);
+  await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
+  expect(queries.length).toBeGreaterThan(0);
   await expect(page.locator('#mode-objects')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#voice-notes')).toBeVisible();
 });

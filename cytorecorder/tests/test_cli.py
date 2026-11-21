@@ -66,6 +66,41 @@ def test_review_cli_discovers_real_images_and_prints_the_steps_to_open(
     assert str(tmp_path / "out" / "quality_labels.csv") in combined
 
 
+def test_review_cli_treats_a_numeric_folder_name_as_a_path_not_an_int(
+    tmp_path: Path,
+) -> None:
+    """
+    Fire coerces a bare numeric CLI value to int by default regardless of
+    a `str` type hint, which would otherwise crash `Path(input_dir)` with
+    a real folder named e.g. "123" (cli.py pins input_dir/output_dir/
+    project/app_url to str parsing via `SetParseFn` to prevent this). Must
+    pass a bare "123" (not a longer path ending in "123") and run from
+    tmp_path's parent for Fire to actually attempt the int coercion.
+    """
+    input_dir = tmp_path / "123"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    output = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(Path(__file__).resolve().parents[1]),
+            "cytorecorder",
+            "review",
+            "--input_dir=123",
+            f"--output_dir={tmp_path / 'out'}",
+            "--open_browser=False",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+        cwd=tmp_path,
+    )
+    assert "Found 1 image(s)" in (output.stdout + output.stderr)
+
+
 def test_review_cli_refuses_and_can_be_forced_past_an_existing_csv(
     tmp_path: Path,
 ) -> None:

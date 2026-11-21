@@ -11,11 +11,11 @@ export default defineConfig({
     { name: 'chromium', use: { browserName: 'chromium' } },
     { name: 'firefox', use: { browserName: 'firefox' } },
   ],
-  use: { baseURL: 'http://127.0.0.1:5187/musivarium/', headless: true },
+  use: { baseURL: 'http://127.0.0.1:5187/CytoRecorder/', headless: true },
   webServer: {
     command: 'node tests/browser/support/voice-test-server.mjs',
     cwd: fileURLToPath(new URL('../../../', import.meta.url)),
-    url: 'http://127.0.0.1:5187/musivarium/tests/browser/support/voice-recorder.html',
+    url: 'http://127.0.0.1:5187/CytoRecorder/tests/browser/support/voice-recorder.html',
     reuseExistingServer: false,
     timeout: 30000,
   },

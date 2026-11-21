@@ -3,11 +3,13 @@ CLI for cytorecorder
 """
 
 import fire
+from fire.decorators import SetParseFn
 
 from cytorecorder.main import DEFAULT_APP_URL, review
 
 
 class cytorecorderCLI:
+    @SetParseFn(str, "input_dir", "output_dir", "project", "app_url")
     def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
         self,
         input_dir: str,

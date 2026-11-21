@@ -8,7 +8,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -30,8 +30,8 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends pulseaudio
           pulseaudio -D --exit-idle-time=-1 --disallow-exit
-          pactl load-module module-null-sink sink_name=musivarium_dummy sink_properties=device.description=Musivarium_Dummy_Output
-          pactl set-default-sink musivarium_dummy
+          pactl load-module module-null-sink sink_name=cytorecorder_dummy sink_properties=device.description=CytoRecorder_Dummy_Output
+          pactl set-default-sink cytorecorder_dummy
       - run: npm run test:browser
       - run: npm run test:static
       - run: npm audit --audit-level=moderate

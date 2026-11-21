@@ -1,6 +1,6 @@
 # CytoRecorder
 
-<img src="https://raw.githubusercontent.com/WayScience/musivarium/main/public/cytorecorder.png" alt="CytoRecorder logo" width="360" />
+<img src="public/cytorecorder.png" alt="CytoRecorder logo" width="360" />
 
 A browser-only microscopy explorer: sample a 2D region, find labelled objects, and inspect a reproducible mosaic of single-object crops. No application backend, volume rendering, or Z projection.
 
@@ -45,7 +45,7 @@ Recording a voice note terminates the feature worker immediately; closing voice 
 
 ## Local whole-image quality review
 
-Single image mode (toggle beside the mosaic) switches from per-object crops to the whole loaded image, for PNG/TIFF files and OME-Zarr sources alike, so a reviewer can label the whole frame rather than individual objects: Good, Out-of-focus, or Debris. Labels persist per annotator and export to a `quality_labels.csv`.
+Single image mode displays the whole image for PNG/TIFF files and shows a whole-image preview for OME-Zarr sources. Whole-image quality labeling is available for PNG/TIFF files only. Choose Good, Out-of-focus, or Debris; labels persist per annotator and can be exported to CSV.
 
 [`cytorecorder`](cytorecorder/) is an optional local CLI that scans a folder of images recursively and opens this app for that review — see [its docs](docs/cytorecorder.md).
 
@@ -110,7 +110,7 @@ npm run build
 npm run preview
 ```
 
-Publish only `dist/`, never the repository root. For GitHub project Pages, use `BASE_PATH=/musivarium/ npm run build`. The **Publish Pages** workflow runs automatically on every push to `main`, runs the unit tests and type checks, builds the project-prefix bundle, and publishes `dist/` if those checks pass. Manual publication remains available through **Run workflow**. Pages must be configured to use GitHub Actions.
+Publish only `dist/`, never the repository root. For GitHub project Pages, use `BASE_PATH=/CytoRecorder/ npm run build`. The **Publish Pages** workflow runs automatically on every push to `main`, runs the unit tests and type checks, builds the project-prefix bundle, and publishes `dist/` if those checks pass. Manual publication remains available through **Run workflow**. Pages must be configured to use GitHub Actions.
 
 The static host must serve WASM with `application/wasm`; remote image hosting must allow CORS from the site's actual origin. No cross-origin-isolation headers or WebGPU are required. Hosted-origin CORS is not guaranteed by localhost testing; verify the deployed URL with `npm run validate:live` after publication. Safari is a best-effort target until separately exercised.
 

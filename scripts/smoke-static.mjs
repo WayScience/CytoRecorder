@@ -5,7 +5,7 @@ import { readFile, mkdir, writeFile, stat } from 'node:fs/promises';
 import { resolve, join, extname } from 'node:path';
 import { createHash } from 'node:crypto';
 const root = resolve('dist'),
-  evidence = resolve(process.env.EVIDENCE_DIR || '.cache/musivarium-static-validation');
+  evidence = resolve(process.env.EVIDENCE_DIR || '.cache/cytorecorder-static-validation');
 await mkdir(evidence, { recursive: true });
 const fixtures = new Map(),
   fixtureManifests = new Map();
@@ -34,7 +34,7 @@ const mime = {
   '.onnx': 'application/octet-stream',
 };
 const reports = [];
-for (const prefix of ['', '/musivarium']) {
+for (const prefix of ['', '/CytoRecorder']) {
   const built = spawnSync('npm', ['run', 'build'], {
     env: { ...process.env, BASE_PATH: prefix ? prefix + '/' : './' },
     stdio: 'inherit',

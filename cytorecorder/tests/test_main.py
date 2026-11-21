@@ -33,6 +33,24 @@ def test_build_app_url_adds_voice_when_enabled() -> None:
     assert url == "https://example.org/app/?project=Bandicoot&voice=1"
 
 
+@pytest.mark.parametrize(
+    ("enable_voice_notes", "expected_query"),
+    [
+        (False, "label=A&label=B&project=Plate+2"),
+        (True, "label=A&label=B&project=Plate+2&voice=1"),
+    ],
+)
+def test_build_app_url_preserves_existing_query_and_fragment(
+    enable_voice_notes: bool, expected_query: str
+) -> None:
+    url = build_app_url(
+        "https://example.org/app/?label=A&project=Old&label=B&voice=1#review",
+        "Plate 2",
+        enable_voice_notes=enable_voice_notes,
+    )
+    assert url == f"https://example.org/app/?{expected_query}#review"
+
+
 def test_build_app_url_ignores_enable_voice_notes_without_a_project() -> None:
     # Nothing to suppress in the browser without a project hint in the
     # first place, so the demo already runs by default either way.

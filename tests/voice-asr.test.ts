@@ -46,7 +46,7 @@ afterEach(() => {
 function setup() {
   vi.stubEnv('BASE_URL', './');
   vi.stubGlobal('Worker', FakeWorker);
-  vi.stubGlobal('document', { baseURI: 'https://example.org/musivarium/' });
+  vi.stubGlobal('document', { baseURI: 'https://example.org/CytoRecorder/' });
   return new AsrClient();
 }
 function worker(): FakeWorker {
@@ -99,7 +99,9 @@ describe('lazy ASR client', () => {
     const [request, transfer] = worker().postMessage.mock.calls[0];
     expect(request.samples).toBe(audio);
     expect(transfer).toEqual([audio.buffer]);
-    expect(request.wasmPaths).toEqual(resolveAsrWasmPaths('./', 'https://example.org/musivarium/'));
+    expect(request.wasmPaths).toEqual(
+      resolveAsrWasmPaths('./', 'https://example.org/CytoRecorder/'),
+    );
     worker().emit({ type: 'result', result } as Omit<AsrResponse, 'id'>);
     await pending;
   });
@@ -197,10 +199,10 @@ describe('ASR pinned configuration', () => {
     expect(ASR_MODEL_REVISION).toMatch(/^[a-f0-9]{40}$/);
     expect(ASR_CHUNK_OPTIONS).toEqual({ chunk_length_s: 25, stride_length_s: 5 });
   });
-  it.each(['./', '/musivarium/'])('resolves GitHub Pages runtime URLs for base %s', (base) => {
-    expect(resolveAsrWasmPaths(base, 'https://example.org/musivarium/?view=1')).toEqual({
-      mjs: 'https://example.org/musivarium/vendor/ort-wasm-simd-threaded.mjs',
-      wasm: 'https://example.org/musivarium/vendor/ort-wasm-simd-threaded.wasm',
+  it.each(['./', '/CytoRecorder/'])('resolves GitHub Pages runtime URLs for base %s', (base) => {
+    expect(resolveAsrWasmPaths(base, 'https://example.org/CytoRecorder/?view=1')).toEqual({
+      mjs: 'https://example.org/CytoRecorder/vendor/ort-wasm-simd-threaded.mjs',
+      wasm: 'https://example.org/CytoRecorder/vendor/ort-wasm-simd-threaded.wasm',
     });
   });
   it('uses a memory-specific message and actionable download retry', () => {
@@ -243,7 +245,7 @@ describe('ASR worker orchestration', () => {
     const { scope, env, pipeline, transcriber } = await setupWorker();
     expect(pipeline).not.toHaveBeenCalled();
     const samples = new Float32Array(16000);
-    const wasmPaths = resolveAsrWasmPaths('./', 'https://example.org/musivarium/');
+    const wasmPaths = resolveAsrWasmPaths('./', 'https://example.org/CytoRecorder/');
     await scope.onmessage!({ data: { id: 7, samples, wasmPaths } } as MessageEvent);
     expect(env).toMatchObject({
       allowLocalModels: false,

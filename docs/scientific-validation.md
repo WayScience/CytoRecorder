@@ -127,7 +127,7 @@ access:
 
 ```sh
 uv run scripts/validate-reference.py --rebuild \
-  --qualification-cache /path/to/musivarium-qualification
+  --qualification-cache /path/to/cytorecorder-qualification
 ```
 
 The directory must contain `requests-index.json`, original response bodies,

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const outDir = await mkdtemp(join(process.env.TMPDIR || tmpdir(), 'cytorecorder-voice-build-'));
-const base = '/musivarium/';
+const base = '/CytoRecorder/';
 await build({
   configFile: false,
   base,
@@ -32,5 +32,5 @@ async function close() {
 process.on('SIGTERM', close);
 process.on('SIGINT', close);
 console.log(
-  'Voice-only production harness: http://127.0.0.1:5187/musivarium/tests/browser/support/voice-recorder.html',
+  'Voice-only production harness: http://127.0.0.1:5187/CytoRecorder/tests/browser/support/voice-recorder.html',
 );

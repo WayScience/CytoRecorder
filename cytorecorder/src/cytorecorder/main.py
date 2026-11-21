@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import webbrowser
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 from cytorecorder.images import discover_images
 
@@ -46,10 +46,18 @@ def build_app_url(app_url: str, project: str, enable_voice_notes: bool = False) 
 
     if not project:
         return app_url
-    params = {"project": project}
+    url = urlsplit(app_url)
+    params = [
+        (key, value)
+        for key, value in parse_qsl(url.query, keep_blank_values=True)
+        if key not in {"project", "voice"}
+    ]
+    params.append(("project", project))
     if enable_voice_notes:
-        params["voice"] = "1"
-    return f"{app_url.rstrip('/')}/?{urlencode(params)}"
+        params.append(("voice", "1"))
+    return url._replace(
+        path=f"{url.path.rstrip('/')}/", query=urlencode(params)
+    ).geturl()
 
 
 def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)

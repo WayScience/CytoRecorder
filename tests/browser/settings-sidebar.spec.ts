@@ -47,7 +47,7 @@ test('the top bar shows an About dialog and a GitHub Source link, no tagline', a
   await expect(page.getByText('Microscopy, sampled.', { exact: true })).toHaveCount(0);
   const source = page.locator('a.source-link');
   await expect(source).toHaveText('Source');
-  await expect(source).toHaveAttribute('href', 'https://github.com/WayScience/musivarium');
+  await expect(source).toHaveAttribute('href', 'https://github.com/WayScience/CytoRecorder');
   await expect(source.locator('svg')).toHaveCount(1);
   await page.getByRole('button', { name: 'About', exact: true }).click();
   const dialog = page.locator('#about');

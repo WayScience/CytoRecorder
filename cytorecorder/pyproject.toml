@@ -4,7 +4,7 @@ requires = [ "setuptools>=64", "setuptools-scm>=8" ]
 
 [project]
 name = "cytorecorder"
-description = "Local companion CLI for CytoRecorder/Musivarium: confirms a folder of whole microscopy images exists (recursively) and opens the hosted CytoRecorder app so a human can complete the whole-image QC review and export themselves."
+description = "Local companion CLI for CytoRecorder: confirms a folder of whole microscopy images exists (recursively) and opens the hosted CytoRecorder app so a human can complete the whole-image QC review and export themselves."
 readme = "README.md"
 authors = [
   { name = "Dave Bunten" },
@@ -56,12 +56,10 @@ where = [ "src" ]
 include = [ "cytorecorder*" ]
 
 [tool.setuptools_scm]
-# This package now lives as a subdirectory of the WayScience/CytoRecorder
-# monorepo rather than its own git root, so point setuptools-scm at the
-# actual repo root and scope tag parsing to this package's own release
-# tags (e.g. "cytorecorder-v0.1.0") so unrelated repo tags never
-# affect this package's computed version.
+# Search the parent repository for CLI release tags only. The command filters
+# tag selection before the regex extracts the version from the selected tag.
 root = ".."
+git_describe_command = "git describe --dirty --tags --long --match 'cytorecorder-v[0-9]*'"
 tag_regex = "^cytorecorder-v(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+.*)$"
 version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"

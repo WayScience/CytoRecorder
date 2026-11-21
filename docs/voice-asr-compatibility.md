@@ -50,7 +50,7 @@ The release-named GitHub raw source URLs tried during verification returned HTTP
 
 ## Genuine production-browser evidence
 
-The standalone harness builds the real client/worker with Vite, serves it at a nested `/musivarium/` deployment path without COOP/COEP, and runs real downloaded weights. It records exact model hashes, network requests, progress, cancellation results and worker closure events. It asserts no startup worker/model downloads, cancels during an ONNX download, retries successfully, cancels during transcription, then retries with **every HTTPS/external request blocked** while keeping local application scripts reachable.
+The standalone harness builds the real client/worker with Vite, serves it at a nested deployment path without COOP/COEP, and runs real downloaded weights. It records exact model hashes, network requests, progress, cancellation results and worker closure events. It asserts no startup worker/model downloads, cancels during an ONNX download, retries successfully, cancels during transcription, then retries with **every HTTPS/external request blocked** while keeping local application scripts reachable.
 
 Both tested browsers reported `crossOriginIsolated: false`, produced the same short transcript, returned `AbortError` for both cancellations, closed all four workers, and logged no browser console errors. No external request was needed on the cached run. Full application offline boot is **not** claimed: blocking localhost as well prevents a new worker script from loading without an offline application installation/service worker.
 
@@ -73,20 +73,20 @@ The first successful load follows the intentional cancelled-download test and ma
 
 Raw execution JSON on the verification machine:
 
-- `/Users/buntend/.hermes/cache/scratch/musivarium-asr-validation/evidence-chromium.json`
-- `/Users/buntend/.hermes/cache/scratch/musivarium-asr-validation/firefox/evidence-firefox.json`
-- `/Users/buntend/.hermes/cache/scratch/musivarium-asr-validation/long/evidence-chromium.json`
+- `evidence-chromium.json`
+- `firefox/evidence-firefox.json`
+- `long/evidence-chromium.json`
 
 ## Reproduce
 
 ```sh
 npx vitest run tests/voice-asr.test.ts
 npm run typecheck
-say -v Samantha -o "$HOME/.hermes/cache/scratch/musivarium-asr-synthetic.aiff" \
+say -v Samantha -o "$HOME/.hermes/cache/scratch/cytorecorder-asr-synthetic.aiff" \
   'The cells in this image look healthy. Save a note for this experiment.'
-afconvert "$HOME/.hermes/cache/scratch/musivarium-asr-synthetic.aiff" \
-  "$HOME/.hermes/cache/scratch/musivarium-asr-synthetic.wav" -f WAVE -d LEI16@16000 -c 1
-ASR_TEST_WAV="$HOME/.hermes/cache/scratch/musivarium-asr-synthetic.wav" \
+afconvert "$HOME/.hermes/cache/scratch/cytorecorder-asr-synthetic.aiff" \
+  "$HOME/.hermes/cache/scratch/cytorecorder-asr-synthetic.wav" -f WAVE -d LEI16@16000 -c 1
+ASR_TEST_WAV="$HOME/.hermes/cache/scratch/cytorecorder-asr-synthetic.wav" \
   ASR_EXPECT_TEXT='cells in this image look healthy' \
   node tests/support/validate-voice-asr.mjs
 # For Firefox add ASR_BROWSER=firefox and a distinct ASR_TEST_OUTPUT directory.
