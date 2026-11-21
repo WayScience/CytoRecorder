@@ -89,12 +89,33 @@ export function loadCells(cells: Cell[]): Promise<boolean> {
         await connection.query(
           `UPDATE morphem_features SET morphem_channels=${quote(cell.channels.join(','))} WHERE cell_id=${quote(cell.cell_id)}`,
         );
+      await connection.query('DROP TABLE IF EXISTS labels');
+      await connection.query(
+        'CREATE TABLE labels AS SELECT cell_id, CAST(NULL AS VARCHAR) AS annotation_label FROM cells',
+      );
       await connection.query('COMMIT');
       return id === generation;
     } catch (error) {
       await connection.query('ROLLBACK');
       throw error;
     }
+  });
+}
+/** Mirrors a cell's latest custom annotation label (from local voice notes) into
+ * the exportable table; only into the exact run that supplied these cells. */
+export function syncLabels(
+  cells: Cell[],
+  labelsByCell: ReadonlyMap<string, string>,
+): Promise<boolean> {
+  return enqueue(async () => {
+    if (currentCells !== cells) return false;
+    const { connection } = await database();
+    await connection.query('UPDATE labels SET annotation_label=NULL');
+    for (const [cellId, label] of labelsByCell)
+      await connection.query(
+        `UPDATE labels SET annotation_label=${quote(label)} WHERE cell_id=${quote(cellId)}`,
+      );
+    return currentCells === cells;
   });
 }
 /** Publish only into the exact run that supplied these native crops. */
@@ -193,9 +214,10 @@ export function exportTable(
   return enqueue(async () => {
     const { db, connection } = await database();
     const selected = validateSelect(sql);
-    const query = includeFeatures
-      ? `SELECT selected.*, features.* EXCLUDE (cell_id) FROM (${selected}) selected LEFT JOIN morphem_features features USING (cell_id)`
-      : selected;
+    const query = `SELECT selected.*${includeFeatures ? ', features.* EXCLUDE (cell_id)' : ''}, labels.annotation_label
+      FROM (${selected}) selected
+      ${includeFeatures ? 'LEFT JOIN morphem_features features USING (cell_id)' : ''}
+      LEFT JOIN labels USING (cell_id)`;
     const name = `cytorecorder-${++exportId}.${format}`;
     if (format === 'parquet') await ensureParquet();
     try {

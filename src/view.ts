@@ -9,6 +9,9 @@ export interface ViewSettings {
   low: number;
   high: number;
   hiddenChannels: number[];
+  /** Preset choices offered (not enforced) for the custom annotation label,
+   * e.g. `?v.labelOptions=Mitotic,Interphase,Apoptotic`. Free text stays allowed. */
+  labelOptions: string[];
 }
 export const DEFAULT_VIEW: ViewSettings = {
   sort: 'random',
@@ -21,14 +24,22 @@ export const DEFAULT_VIEW: ViewSettings = {
   low: 0,
   high: 25000,
   hiddenChannels: [],
+  labelOptions: [],
 };
 export function parseView(url: string): ViewSettings {
   const params = new URL(url).searchParams,
-    v = { ...DEFAULT_VIEW, hiddenChannels: [] as number[] };
+    v = { ...DEFAULT_VIEW, hiddenChannels: [] as number[], labelOptions: [] as string[] };
   for (const key of Object.keys(v) as (keyof ViewSettings)[]) {
     const raw = params.get('v.' + key);
     if (raw === null) continue;
     if (key === 'hiddenChannels') v.hiddenChannels = raw ? raw.split(',').map(Number) : [];
+    else if (key === 'labelOptions')
+      v.labelOptions = raw
+        ? raw
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
     else if (typeof v[key] === 'number')
       (v as unknown as Record<string, unknown>)[key] = Number(raw);
     else if (typeof v[key] === 'boolean')
@@ -49,6 +60,11 @@ export function parseView(url: string): ViewSettings {
     v.hiddenChannels.some((i) => !Number.isSafeInteger(i) || i < 0)
   )
     throw Error('Invalid hidden display channels');
+  if (
+    v.labelOptions.length > 100 ||
+    v.labelOptions.some((s) => typeof s !== 'string' || !s || s.length > 200)
+  )
+    throw Error('Invalid label options');
   return v;
 }
 export function withView(href: string, view: ViewSettings): string {

@@ -225,7 +225,10 @@ export function contrastLimits(pixels: Pixels): [number, number] {
 }
 export function validateSettings(s: Settings): Settings {
   const url = new URL(s.source);
-  if (!['http:', 'https:'].includes(url.protocol)) throw Error('Source must use HTTP or HTTPS');
+  // 'local:' is a drag-and-drop/file-picker upload, opened directly as a pre-built
+  // ImageSource (see worker.ts); it never reaches openImageSource's HTTP path.
+  if (!['http:', 'https:', 'local:'].includes(url.protocol))
+    throw Error('Source must use HTTP or HTTPS, or be a local upload');
   for (const key of [
     'level',
     't',

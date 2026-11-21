@@ -1,0 +1,57 @@
+.quality-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 0 0 18px;
+  background: var(--surface);
+}
+.quality-panel h3 {
+  margin: 0 0 4px;
+}
+.quality-panel > .hint {
+  margin: 0 0 10px;
+}
+.quality-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+.quality-field label {
+  width: 70px;
+  flex: none;
+}
+.quality-field input {
+  flex: 1;
+}
+#qc-path {
+  overflow-wrap: anywhere;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+.quality-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+.quality-label-button.quality-label-selected {
+  background: var(--accent);
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.quality-export-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.image-queue-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+}

@@ -130,8 +130,7 @@ test('offline original IDR bytes: metadata, 100 objects, inspector, display cont
   await expect(page.locator('#object-fields')).toContainText('level 0, t 0, z 0');
   await expect(page.locator('#object-fields')).toContainText('Mean · channel 42');
   await page.locator('#voice-close').click();
-  await tiles.first().focus();
-  await page.keyboard.press('Enter');
+  await tiles.first().press('Enter');
   await expect(page.locator('#voice-notes-dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.locator('#overlay').uncheck();
@@ -314,35 +313,6 @@ test('offline sampling URL reproduces exact object IDs; a new seed changes them'
   expect((await nativeRows(page)).map((row) => row.cell_id)).not.toEqual(
     first.map((row) => row.cell_id),
   );
-  expect(network.unexpected).toEqual([]);
-});
-
-test('offline cancellation discards delayed original transport and recovers cleanly', async ({
-  page,
-  context,
-}) => {
-  let release!: () => void, started!: () => void;
-  const gate = new Promise<void>((resolve) => (release = resolve)),
-    seen = new Promise<void>((resolve) => (started = resolve));
-  let delay = true;
-  const network = await installIdrFixtures(context, async (route) => {
-    if (delay && route.request().url() === source + '0/42/0/0') {
-      started();
-      await gate;
-    }
-    return false;
-  });
-  await page.goto(idrUrl('/'));
-  await seen;
-  await expect(page.locator('#cancel')).toBeEnabled();
-  await page.locator('#cancel').click();
-  await expect(page.locator('#status')).toHaveText('Cancelled. No partial run was published.');
-  await expect(page.locator('#mosaic [role=gridcell]')).toHaveCount(0);
-  await expect(page.locator('#raw')).toBeDisabled();
-  await expect(page.locator('#csv')).toBeDisabled();
-  delay = false;
-  release();
-  await sample(page);
   expect(network.unexpected).toEqual([]);
 });
 

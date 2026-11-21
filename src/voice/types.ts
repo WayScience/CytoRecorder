@@ -24,6 +24,9 @@ export interface VoiceNote extends VoiceContext {
   source: 'local-whisper' | 'manual';
   modelId: string;
   modelRevision?: string;
+  /** Custom short tag/category, separate from the free-text note; the one
+   * exported as a dedicated column in the CSV/Parquet object table. */
+  annotationLabel?: string;
 }
 
 export interface Transcript {

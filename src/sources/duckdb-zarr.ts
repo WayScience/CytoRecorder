@@ -50,6 +50,7 @@ export class DuckDBZarrSource {
     readonly metadata: NgffMetadata,
     private signal: AbortSignal,
     private session: ReadSession,
+    private local?: Map<string, File>,
   ) {}
   static async open(url: string, signal: AbortSignal, session = new ReadSession(signal)) {
     signal = AbortSignal.any([signal, session.signal]);
@@ -60,19 +61,7 @@ export class DuckDBZarrSource {
     u.pathname = u.pathname.replace(/\/*$/, '/');
     const source = new DuckDBZarrSource(u.href, {} as NgffMetadata, signal, session);
     try {
-      const v2 = await source.object('.zgroup', true);
-      let attrs;
-      if (v2) {
-        const group = JSON.parse(new TextDecoder().decode(v2));
-        if (group.zarr_format !== 2) throw Error('Expected a Zarr v2 group');
-        attrs = await source.json('.zattrs');
-      } else {
-        const group = await source.json('zarr.json');
-        if (group.node_type !== 'group')
-          throw Error('Expected an OME-NGFF image group, not an array');
-        attrs = group.attributes;
-      }
-      Object.assign(source.metadata, parseNgff(attrs));
+      await DuckDBZarrSource.readGroupMetadata(source);
       return source;
     } catch (e) {
       if (signal.aborted) throw e;
@@ -80,6 +69,45 @@ export class DuckDBZarrSource {
         `Cannot open OME-Zarr image. Check metadata, URL, CORS and network: ${e instanceof Error ? e.message : e}`,
       );
     }
+  }
+  /** Reads a drag-and-dropped or file-picker-selected local OME-Zarr folder,
+   * keyed exactly like the HTTP backend's relative object keys — no server upload.
+   * `label` may be a bare folder name or an already-formed `local://` URL (as
+   * received back from Settings.source), either way used as-is, never re-wrapped. */
+  static async openLocal(files: Map<string, File>, label: string, signal: AbortSignal) {
+    signal.throwIfAborted();
+    const url = label.startsWith('local://') ? label : `local://${encodeURIComponent(label)}/`;
+    const source = new DuckDBZarrSource(
+      url,
+      {} as NgffMetadata,
+      signal,
+      new ReadSession(signal),
+      files,
+    );
+    try {
+      await DuckDBZarrSource.readGroupMetadata(source);
+      return source;
+    } catch (e) {
+      if (signal.aborted) throw e;
+      throw Error(
+        `Cannot open local OME-Zarr folder. Check it contains a valid image group: ${e instanceof Error ? e.message : e}`,
+      );
+    }
+  }
+  private static async readGroupMetadata(source: DuckDBZarrSource): Promise<void> {
+    const v2 = await source.object('.zgroup', true);
+    let attrs;
+    if (v2) {
+      const group = JSON.parse(new TextDecoder().decode(v2));
+      if (group.zarr_format !== 2) throw Error('Expected a Zarr v2 group');
+      attrs = await source.json('.zattrs');
+    } else {
+      const group = await source.json('zarr.json');
+      if (group.node_type !== 'group')
+        throw Error('Expected an OME-NGFF image group, not an array');
+      attrs = group.attributes;
+    }
+    Object.assign(source.metadata, parseNgff(attrs));
   }
   private async object(key: string, optional = false): Promise<Uint8Array | undefined> {
     this.signal.throwIfAborted();
@@ -95,16 +123,10 @@ export class DuckDBZarrSource {
       return pending;
     }
     const task = (async () => {
-      const response = await this.session.request(new Request(url), (attempt) => {
-        this.stats.requests++;
-        this.stats.bytes += attempt.bytes;
-        this.stats.fetch_ms = (this.stats.fetch_ms ?? 0) + attempt.milliseconds;
-        this.stats.objects.push(attempt);
-      });
-      if (response.status === 404 && optional) return undefined;
-      if (!response.ok)
-        throw Error(`HTTP ${response.status} reading original source object ${url}`);
-      const bytes = new Uint8Array(await response.arrayBuffer());
+      const bytes = this.local
+        ? await this.readLocal(key, url, optional)
+        : await this.readRemote(url, optional);
+      if (bytes === undefined) return undefined;
       while (this.cacheBytes + bytes.byteLength > 24 * 1024 * 1024 && this.cache.size) {
         const first = this.cache.keys().next().value!;
         this.cacheBytes -= this.cache.get(first)!.byteLength;
@@ -122,6 +144,43 @@ export class DuckDBZarrSource {
     } finally {
       this.pending.delete(url);
     }
+  }
+  private async readRemote(url: string, optional: boolean): Promise<Uint8Array | undefined> {
+    const response = await this.session.request(new Request(url), (attempt) => {
+      this.stats.requests++;
+      this.stats.bytes += attempt.bytes;
+      this.stats.fetch_ms = (this.stats.fetch_ms ?? 0) + attempt.milliseconds;
+      this.stats.objects.push(attempt);
+    });
+    if (response.status === 404 && optional) return undefined;
+    if (!response.ok) throw Error(`HTTP ${response.status} reading original source object ${url}`);
+    return new Uint8Array(await response.arrayBuffer());
+  }
+  /** Local files read from the browser's own File objects; never uploaded anywhere. */
+  private async readLocal(
+    key: string,
+    url: string,
+    optional: boolean,
+  ): Promise<Uint8Array | undefined> {
+    const file = this.local!.get(key);
+    if (!file) {
+      if (optional) return undefined;
+      throw Error(`Local file not found in the uploaded folder: ${key}`);
+    }
+    const started = performance.now(),
+      bytes = new Uint8Array(await file.arrayBuffer()),
+      milliseconds = performance.now() - started;
+    this.stats.requests++;
+    this.stats.bytes += bytes.byteLength;
+    this.stats.fetch_ms = (this.stats.fetch_ms ?? 0) + milliseconds;
+    this.stats.objects.push({
+      url,
+      bytes: bytes.byteLength,
+      status: 200,
+      milliseconds,
+      started_at_ms: started,
+    });
+    return bytes;
   }
   private async json(key: string) {
     const body = await this.object(key);

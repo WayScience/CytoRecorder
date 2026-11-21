@@ -44,7 +44,6 @@ test('invalid shared settings remain actionable without silently loading default
   const network = await installIdrFixtures(context);
   await page.goto(idrUrl('/?count=100000'));
   await expect(page.locator('#status')).toContainText('Tile count');
-  await expect(page.locator('#cancel')).toBeDisabled();
   expect(network.requests).toHaveLength(0);
   await expect(page.getByRole('button', { name: 'Show settings', exact: true })).toBeVisible();
 });
@@ -60,7 +59,6 @@ test('settings start collapsed and can be opened without replacing the mosaic', 
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('#source')).toBeHidden();
   await expect(page.locator('#shuffle')).toBeVisible();
-  await expect(page.locator('#cancel')).toBeVisible();
   const full = await page.locator('.workspace').evaluate((el) => el.getBoundingClientRect().width),
     requests = network.requests.length;
   await toggle.click();

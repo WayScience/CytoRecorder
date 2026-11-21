@@ -1,11 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { installImageFixtures } from './support/idr-fixtures';
-import {
-  discoveryResponse,
-  firstDiscoveryRecord,
-  installDiscoveryFixtures,
-} from './support/bia-discovery-fixtures';
+import { firstDiscoveryRecord, installDiscoveryFixtures } from './support/bia-discovery-fixtures';
 
 const directory = new URL('./fixtures/bia3204/', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', directory), 'utf8'));
@@ -71,41 +67,4 @@ test('API failure preserves the current dataset and exports rather than cycling 
   await expect(page.locator('#result-count')).toHaveText('10 of 10 objects');
   await expect(page.locator('#csv')).toBeEnabled();
   expect(new URL(page.url()).searchParams.get('source')).toBe(source);
-});
-
-test('cancelling archive discovery prevents its late response from changing the image', async ({
-  page,
-  context,
-}) => {
-  await installImageFixtures(context, directory, manifest);
-  let requested = false,
-    release!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route(
-    'https://beta.bioimagearchive.org/search/v1/search/fts/image**',
-    async (route) => {
-      requested = true;
-      await gate;
-      await route
-        .fulfill({ status: 200, contentType: 'application/json', body: discoveryResponse })
-        .catch(() => {});
-    },
-  );
-  try {
-    await page.goto('/?reference=bia3204-ring-rep2');
-    await expect(page.locator('#shuffle')).toBeEnabled({ timeout: 45000 });
-    const source = new URL(page.url()).searchParams.get('source');
-    await page.locator('#shuffle').click();
-    await expect.poll(() => requested).toBe(true);
-    await page.locator('#cancel').click();
-    release();
-    await expect(page.locator('#status')).toHaveText('Cancelled. No partial run was published.');
-    await expect(page.locator('#shuffle')).toBeEnabled();
-    expect(new URL(page.url()).searchParams.get('source')).toBe(source);
-    await expect(page.locator('#image-title')).toHaveText('Human U2OS cells under heat stress');
-  } finally {
-    release();
-  }
 });

@@ -1,6 +1,7 @@
 import type { Transcript, VoiceContext, VoiceNote } from './types';
 
 export const MAX_NOTE_LENGTH = 20000;
+export const MAX_LABEL_LENGTH = 200;
 const DB_VERSION = 1;
 const STORE = 'notes';
 
@@ -12,6 +13,7 @@ export function createNote(
   context: VoiceContext,
   text: string,
   transcript?: Transcript,
+  annotationLabel?: string,
 ): VoiceNote {
   const timestamp = new Date().toISOString();
   return validateNote({
@@ -26,6 +28,7 @@ export function createNote(
     ...(transcript
       ? { rawTranscript: transcript.text, modelRevision: transcript.modelRevision }
       : {}),
+    ...(annotationLabel?.trim() ? { annotationLabel: annotationLabel.trim() } : {}),
   });
 }
 
@@ -49,6 +52,13 @@ export function validateNote(value: unknown): VoiceNote {
     throw Error('Invalid note identity or timestamps.');
   if (typeof n.text !== 'string' || !n.text.trim() || n.text.length > MAX_NOTE_LENGTH)
     throw Error(`Note text must contain 1–${MAX_NOTE_LENGTH} characters.`);
+  if (
+    n.annotationLabel !== undefined &&
+    (typeof n.annotationLabel !== 'string' ||
+      !n.annotationLabel.trim() ||
+      n.annotationLabel.length > MAX_LABEL_LENGTH)
+  )
+    throw Error(`Annotation label must be empty or 1–${MAX_LABEL_LENGTH} characters.`);
   if (
     !Array.isArray(n.selectedCellIds) ||
     n.selectedCellIds.some((id) => typeof id !== 'string' || !id)

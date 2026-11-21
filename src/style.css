@@ -154,6 +154,21 @@ main.settings-collapsed {
   flex-wrap: wrap;
   gap: 8px;
 }
+.mosaic-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.view-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.view-mode-toggle button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--ink);
+  border-color: var(--accent);
+}
 .run-actions .primary {
   grid-column: 1 / -1;
 }
@@ -294,12 +309,39 @@ button:disabled {
   color: var(--accent);
   margin: 8px 0;
 }
+.channel-legend-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 14px;
+}
+.multi-select-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  font-size: 12px;
+}
+.multi-select-bar span {
+  flex: 1;
+  color: var(--muted);
+}
+.channel-legend-heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
 .channel-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 13px;
-  font-size: 11px;
-  margin-top: 8px;
+  font-size: 12px;
   color: var(--muted);
 }
 .channel-legend span {
@@ -430,6 +472,15 @@ button:disabled {
   border-radius: 4px;
   image-rendering: pixelated;
 }
+.whole-preview.primary {
+  padding: 16px 18px;
+}
+.whole-preview.primary summary {
+  display: none;
+}
+.whole-preview.primary .whole-preview-body canvas {
+  max-height: 72vh;
+}
 .whole-preview-body .hint {
   margin: 8px 0 0;
 }
@@ -514,6 +565,10 @@ progress {
   border-radius: 5px;
   scrollbar-color: #40565f #0b1418;
 }
+.mosaic-scroll.drag-over {
+  border: 1px dashed var(--accent);
+  background: #17252b;
+}
 #mosaic {
   position: relative;
   min-width: 0;
@@ -527,6 +582,13 @@ progress {
 }
 .object-tile:hover {
   border-color: var(--accent);
+}
+.object-tile.annotated {
+  border-color: #5aa9c9;
+}
+.object-tile.multi-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .object-tile canvas {
   width: 100%;

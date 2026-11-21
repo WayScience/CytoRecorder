@@ -6,6 +6,7 @@ import { AsrClient } from './asr-client';
 import {
   createNote,
   exportNotes,
+  MAX_LABEL_LENGTH,
   MAX_NOTE_LENGTH,
   NotesStore,
   snapshotContext,
@@ -25,6 +26,7 @@ export class VoiceNotesPanel {
   private readonly asr = new AsrClient();
   private readonly dialog: HTMLDialogElement;
   private readonly text: HTMLTextAreaElement;
+  private readonly label: HTMLInputElement;
   private phase: Phase = 'idle';
   private epoch = 0;
   private context: VoiceContext = { selectedCellIds: [] };
@@ -37,6 +39,7 @@ export class VoiceNotesPanel {
   private audio?: Float32Array;
   private previewUrl?: string;
   private savedText = '';
+  private savedLabel = '';
   private storageError = '';
 
   constructor(
@@ -59,6 +62,7 @@ export class VoiceNotesPanel {
         <audio id="voice-preview" controls preload="none" aria-label="Unsaved recording preview" hidden></audio>
         <button id="voice-retry" class="secondary" type="button" hidden>Retry local transcription</button>
         <label for="voice-text">Note text · edit before saving</label><textarea id="voice-text" rows="5" maxlength="${MAX_NOTE_LENGTH}" placeholder="Type a note, or record up to 90 seconds. Scientific terms may need correction." spellcheck="true"></textarea>
+        <label for="voice-label">Annotation label (optional) · pick a preset or type your own</label><input id="voice-label" list="voice-label-options" maxlength="${MAX_LABEL_LENGTH}" placeholder="e.g. Mitotic" spellcheck="false"><datalist id="voice-label-options"></datalist>
         <div class="voice-actions voice-save-actions"><button id="voice-save" class="primary" type="button" disabled>Save</button></div>
         <p class="hint">Notes stay on this origin and browser profile in IndexedDB, not in the image or shared link. Export a backup before clearing site data. Raw audio is never saved.</p>
         <div class="voice-list-heading"><h3>Saved notes</h3><button id="voice-scope" class="secondary" type="button">Show all saved notes</button><button id="voice-export" class="secondary" type="button" disabled>Export listed notes JSON</button></div>
@@ -67,6 +71,7 @@ export class VoiceNotesPanel {
       </dialog>`;
     this.dialog = this.el<HTMLDialogElement>('voice-notes-dialog');
     this.text = this.el<HTMLTextAreaElement>('voice-text');
+    this.label = this.el<HTMLInputElement>('voice-label');
     this.button('voice-all').onclick = () => this.open();
     this.button('voice-close').onclick = () => this.close();
     this.button('voice-record').onclick = () => void this.record();
@@ -83,6 +88,10 @@ export class VoiceNotesPanel {
     this.text.oninput = () => {
       if (!this.locked) this.lockContext();
       this.showTranscriptWarning(this.text.value);
+      this.controls();
+    };
+    this.label.oninput = () => {
+      if (!this.locked) this.lockContext();
       this.controls();
     };
     this.dialog.addEventListener('keydown', (event) => {
@@ -108,11 +117,25 @@ export class VoiceNotesPanel {
   private button(id: string) {
     return this.el<HTMLButtonElement>(id);
   }
+  /** Preset suggestions only: the input still accepts any custom text. */
+  setLabelOptions(options: string[]): void {
+    this.el('voice-label-options').replaceChildren(
+      ...options.map((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        return option;
+      }),
+    );
+  }
   get isBusy(): boolean {
     return this.phase !== 'idle';
   }
   private get dirty(): boolean {
-    return this.text.value !== this.savedText || this.audio !== undefined;
+    return (
+      this.text.value !== this.savedText ||
+      this.label.value.trim() !== this.savedLabel ||
+      this.audio !== undefined
+    );
   }
 
   open(context: VoiceContext = { selectedCellIds: [] }): boolean {
@@ -125,6 +148,10 @@ export class VoiceNotesPanel {
     this.all = !context.selectedCellIds.length;
     this.resetDraft();
     this.el('object-details').hidden = true; // caller repopulates/reveals for a specific cell
+    this.el('voice-title').textContent =
+      context.selectedCellIds.length > 1
+        ? `Record annotations · ${context.selectedCellIds.length} objects`
+        : 'Record annotations';
     this.dialog.show(); // Non-modal: the mosaic stays visible and usable behind the panel.
     this.text.focus();
     void this.refresh().catch((error) => this.error(error));
@@ -179,6 +206,8 @@ export class VoiceNotesPanel {
     this.editing = undefined;
     this.text.value = '';
     this.savedText = '';
+    this.label.value = '';
+    this.savedLabel = '';
     this.draftContext = structuredClone(this.context);
     this.locked = false;
     this.el('voice-retry').hidden = true;
@@ -210,6 +239,7 @@ export class VoiceNotesPanel {
     this.button('voice-save').disabled = this.isBusy || !this.text.value.trim();
     this.button('voice-retry').disabled = this.isBusy;
     this.text.readOnly = this.isBusy;
+    this.label.disabled = this.isBusy;
     for (const control of this.host.querySelectorAll<HTMLButtonElement>(
       '.voice-edit, .voice-delete',
     ))
@@ -367,13 +397,18 @@ export class VoiceNotesPanel {
 
   private draftNote(): VoiceNote {
     if (!this.locked) this.lockContext();
-    return this.editing
-      ? validateNote({
-          ...this.editing,
-          text: this.text.value.trim(),
-          updatedAt: new Date().toISOString(),
-        })
-      : createNote(this.draftContext, this.text.value, this.transcript);
+    const label = this.label.value.trim();
+    if (this.editing) {
+      const merged: VoiceNote = {
+        ...this.editing,
+        text: this.text.value.trim(),
+        updatedAt: new Date().toISOString(),
+      };
+      if (label) merged.annotationLabel = label;
+      else delete merged.annotationLabel;
+      return validateNote(merged);
+    }
+    return createNote(this.draftContext, this.text.value, this.transcript, label);
   }
 
   private async save(): Promise<void> {
@@ -386,6 +421,8 @@ export class VoiceNotesPanel {
       this.editing = note;
       this.savedText = note.text;
       this.text.value = note.text;
+      this.savedLabel = note.annotationLabel ?? '';
+      this.label.value = this.savedLabel;
       this.audio = undefined;
       this.clearPreview();
       this.el('voice-retry').hidden = true;
@@ -446,7 +483,7 @@ export class VoiceNotesPanel {
         content = document.createElement('p'),
         actions = document.createElement('div');
       info.className = 'hint';
-      info.textContent = `${new Date(note.updatedAt).toLocaleString()} · ${note.source === 'manual' ? 'Manual text' : 'Local Whisper'} · ${note.selectedCellIds.join(', ') || 'unattached'} · ${note.imageId ?? 'no image'}${note.labelSource ? ` · label source ${note.labelSource}` : ''}`;
+      info.textContent = `${new Date(note.updatedAt).toLocaleString()}${note.annotationLabel ? ` · Label: ${note.annotationLabel}` : ''} · ${note.source === 'manual' ? 'Manual text' : 'Local Whisper'} · ${note.selectedCellIds.join(', ') || 'unattached'} · ${note.imageId ?? 'no image'}${note.labelSource ? ` · label source ${note.labelSource}` : ''}`;
       content.className = 'voice-note-text';
       content.textContent = note.text;
       actions.className = 'voice-actions';
@@ -463,6 +500,7 @@ export class VoiceNotesPanel {
         this.draftContext = structuredClone(note);
         this.locked = true;
         this.text.value = this.savedText = note.text;
+        this.label.value = this.savedLabel = note.annotationLabel ?? '';
         this.controls();
         this.text.focus();
       };

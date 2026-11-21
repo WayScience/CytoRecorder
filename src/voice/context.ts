@@ -22,6 +22,16 @@ export function contextForCell(cell: Cell): VoiceContext {
   };
 }
 
+/** Batch annotation: one note spans every selected cell. All cells come from the
+ * same run, so plane/segmentation/settings are identical; only `region` (a single
+ * box) has no honest multi-cell equivalent, so it is omitted rather than guessed. */
+export function contextForCells(cells: Cell[]): VoiceContext {
+  if (cells.length === 1) return contextForCell(cells[0]);
+  const { region, ...shared } = contextForCell(cells[0]);
+  void region;
+  return { ...shared, selectedCellIds: cells.map((cell) => cell.cell_id) };
+}
+
 /** One scientific identity for both tile badges and cell-scoped note listings.
  * Sampling seeds, display channels and crop/filter settings do not rename a
  * source-label object. Computed masks additionally depend on the window,

@@ -27,7 +27,8 @@
     "@huggingface/transformers": "4.3.2",
     "apache-arrow": "17.0.0",
     "fflate": "0.8.3",
-    "onnxruntime-web": "1.31.1"
+    "onnxruntime-web": "1.31.1",
+    "utif2": "^4.1.0"
   },
   "overrides": {
     "@huggingface/transformers": {

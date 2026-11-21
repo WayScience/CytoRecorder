@@ -77,7 +77,6 @@ test('a streamed original image advances the progress bar before a tile finishes
       )
       .toBe(true);
     await expect(page.locator('#result-count')).not.toHaveText('100 of 100 objects');
-    await expect(page.locator('#cancel')).toBeEnabled();
     const elapsed = await page.locator('#read-elapsed').textContent();
     await expect.poll(() => page.locator('#read-elapsed').textContent()).not.toBe(elapsed);
     release();

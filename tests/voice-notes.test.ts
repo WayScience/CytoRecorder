@@ -38,6 +38,20 @@ describe('local scientific notes', () => {
     expect(spoken.modelRevision).toBe('immutable-revision');
     expect(validateNote(spoken)).toEqual(spoken);
   });
+  it('accepts an optional custom annotation label, trimmed, distinct from the free-text note', () => {
+    const labeled = createNote(
+      snapshotContext(context),
+      'looks apoptotic',
+      undefined,
+      '  Apoptotic  ',
+    );
+    expect(labeled.annotationLabel).toBe('Apoptotic');
+    expect(validateNote(labeled)).toEqual(labeled);
+    const unlabeled = createNote(snapshotContext(context), 'no tag here');
+    expect(unlabeled.annotationLabel).toBeUndefined();
+    const blank = createNote(snapshotContext(context), 'blank label ignored', undefined, '   ');
+    expect(blank.annotationLabel).toBeUndefined();
+  });
   it('exports Unicode text, context, timestamps and original transcript without loss; no audio', () => {
     const note = createNote(
       snapshotContext(context),
@@ -63,6 +77,9 @@ describe('local scientific notes', () => {
       { ...note, source: 'remote-asr' },
       { ...note, source: 'manual', modelId: 'whisper' },
       { ...note, source: 'local-whisper', modelId: '' },
+      { ...note, annotationLabel: '' },
+      { ...note, annotationLabel: 'x'.repeat(201) },
+      { ...note, annotationLabel: 42 },
     ])
       expect(() => validateNote(bad)).toThrow();
     expect(() => createNote(snapshotContext(context), '')).toThrow(/text/i);
