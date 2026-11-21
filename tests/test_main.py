@@ -59,3 +59,38 @@ def test_review_never_opens_a_browser_when_told_not_to(
     monkeypatch.setattr("webbrowser.open", lambda url: opened.append(url))
     review(str(input_dir), str(tmp_path / "out"), open_browser=False)
     assert opened == []
+
+
+def test_review_refuses_to_proceed_when_output_already_has_a_non_empty_csv(
+    tmp_path: Path,
+) -> None:
+    input_dir = tmp_path / "images"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    (output_dir / "quality_labels.csv").write_text("image_path,project\na.png,p\n")
+    with pytest.raises(FileExistsError, match="already has content"):
+        review(str(input_dir), str(output_dir), open_browser=False)
+
+
+def test_review_proceeds_over_an_existing_csv_when_force_is_set(tmp_path: Path) -> None:
+    input_dir = tmp_path / "images"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    (output_dir / "quality_labels.csv").write_text("image_path,project\na.png,p\n")
+    url = review(str(input_dir), str(output_dir), open_browser=False, force=True)
+    assert "project=images" in url
+
+
+def test_review_ignores_an_existing_but_empty_csv_without_force(tmp_path: Path) -> None:
+    input_dir = tmp_path / "images"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    (output_dir / "quality_labels.csv").touch()  # zero bytes: nothing real to lose
+    url = review(str(input_dir), str(output_dir), open_browser=False)
+    assert "project=images" in url

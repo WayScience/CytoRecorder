@@ -64,3 +64,51 @@ def test_review_cli_discovers_real_images_and_prints_the_steps_to_open(
     assert "Found 1 image(s)" in combined
     assert "Open: https://wayscience.github.io/musivarium/?project=images" in combined
     assert str(tmp_path / "out" / "quality_labels.csv") in combined
+
+
+def test_review_cli_refuses_and_can_be_forced_past_an_existing_csv(
+    tmp_path: Path,
+) -> None:
+    input_dir = tmp_path / "images"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    (output_dir / "quality_labels.csv").write_text("image_path,project\na.png,p\n")
+
+    refused = subprocess.run(
+        [
+            "uv",
+            "run",
+            "cytorecorder-local",
+            "review",
+            f"--input_dir={input_dir}",
+            f"--output_dir={output_dir}",
+            "--open_browser=False",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+    )
+    assert refused.returncode != 0
+    assert "already has content" in (refused.stdout + refused.stderr)
+
+    forced = subprocess.run(
+        [
+            "uv",
+            "run",
+            "cytorecorder-local",
+            "review",
+            f"--input_dir={input_dir}",
+            f"--output_dir={output_dir}",
+            "--open_browser=False",
+            "--force=True",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+    )
+    assert "Warning:" in (forced.stdout + forced.stderr)
+    assert "will be overwritten" in (forced.stdout + forced.stderr)
