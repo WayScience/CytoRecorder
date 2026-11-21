@@ -56,7 +56,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/d33bs/cytorecorder-local",
+            "url": "https://github.com/WayScience/cytorecorder-local",
             "icon": "fa-brands fa-github",
         },
     ],
