@@ -1447,9 +1447,21 @@ button('mosaic-png').onclick = () =>
 
 if (initialSettingsValid) {
   const params = new URL(location.href).searchParams,
-    projectHint = params.get('project');
+    projectHint = params.get('project'),
+    voiceEnabledOnLoad = params.get('voice') === '1';
   if (projectHint) qualityPanel.prefillProject(projectHint);
-  if (!params.has('source') && !params.has('reference')) {
+  // A project hint means this tab was opened by the cytorecorder CLI for a
+  // dedicated whole-image QC review session, not the public demo: skip the
+  // automatic BIA fetch and per-object voice notes (objects mode) by
+  // default, and just wait for the person to drag their own folder in.
+  // `?voice=1` (cytorecorder review --enable_voice_notes) opts back into
+  // today's default demo behavior even with a project hint present.
+  const suppressAutoDemo = Boolean(projectHint) && !voiceEnabledOnLoad;
+  if (suppressAutoDemo) {
+    setStatus(
+      `Drag the image folder for "${projectHint}" onto the mosaic, or use Upload folder, to begin reviewing.`,
+    );
+  } else if (!params.has('source') && !params.has('reference')) {
     void pullNewImage(false);
   } else {
     start('run');

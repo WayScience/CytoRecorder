@@ -118,19 +118,41 @@ test('a local folder of PNG/TIFF images (including a subdirectory) opens as a st
   await expect(page.locator('#image-prev')).toBeDisabled();
 });
 
-test('a ?project= URL param (as opened by the cytorecorder review CLI) prefills the Project field', async ({
+test('a ?project= URL param (as opened by the cytorecorder review CLI) prefills the Project field and skips the auto-demo', async ({
   page,
   context,
 }) => {
-  await installIdrFixtures(context);
+  const network = await installIdrFixtures(context);
   await page.goto(idrUrl('/?project=Bandicoot'));
-  await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
   // Prefilled before any image is loaded or Single image mode is even opened.
   await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
+  await expect(page.locator('#status')).toContainText('Bandicoot');
+  await expect(page.locator('#status')).toContainText('Drag the image folder');
+  // No automatic BioImage Archive fetch: a dedicated CLI review session,
+  // not the public demo, so there is nothing to wait for and no network
+  // call to confirm absent except by giving the page a moment to settle.
+  await page.waitForTimeout(500);
+  expect(network.requests.length).toBe(0);
+  await expect(page.locator('#csv')).toBeDisabled();
 
   await page.locator('#upload-image-input').setInputFiles(samplePng);
   // A manually loaded image's own project never overwrites an already-set field.
   await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
+});
+
+test('?project= with ?voice=1 (cytorecorder review --enable_voice_notes) keeps the default demo', async ({
+  page,
+  context,
+}) => {
+  await installIdrFixtures(context);
+  await page.goto(idrUrl('/?project=Bandicoot&voice=1'));
+  await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
+  // The usual public-demo behavior still runs: automatic BIA fetch,
+  // objects mode with a real mosaic, voice notes available.
+  await expect(page.locator('#result-count')).toContainText('of', { timeout: 30000 });
+  await expect(page.locator('#csv')).toBeEnabled();
+  await expect(page.locator('#mode-objects')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#voice-notes')).toBeVisible();
 });
 
 test('export falls back to a plain download when the Save-As picker API is unavailable (e.g. Firefox)', async ({

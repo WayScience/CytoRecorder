@@ -19,17 +19,25 @@ from cytorecorder.images import discover_images
 DEFAULT_APP_URL = "https://wayscience.github.io/CytoRecorder/"
 
 
-def build_app_url(app_url: str, project: str) -> str:
+def build_app_url(app_url: str, project: str, enable_voice_notes: bool = False) -> str:
     """
     Builds the CytoRecorder URL to open, carrying only the project name
-    (prefilled into the whole-image QC panel's Project field) — there is no
-    server behind this URL to fetch images from or export to.
+    (prefilled into the whole-image QC panel's Project field) and an
+    optional voice-notes opt-in — there is no server behind this URL to
+    fetch images from or export to.
 
     Args:
         app_url (str):
             Base URL of the hosted CytoRecorder app.
         project (str):
             Project name to prefill in the browser.
+        enable_voice_notes (bool):
+            A project hint makes CytoRecorder skip its default public-demo
+            behavior (automatic BioImage Archive fetch, per-object voice
+            notes) and wait for a folder to be dragged in instead. Set this
+            to opt back into that default demo behavior anyway. Has no
+            effect when ``project`` is empty, since the demo already runs
+            by default in that case.
 
     Returns:
         str:
@@ -38,7 +46,10 @@ def build_app_url(app_url: str, project: str) -> str:
 
     if not project:
         return app_url
-    return f"{app_url.rstrip('/')}/?{urlencode({'project': project})}"
+    params = {"project": project}
+    if enable_voice_notes:
+        params["voice"] = "1"
+    return f"{app_url.rstrip('/')}/?{urlencode(params)}"
 
 
 def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
@@ -48,6 +59,7 @@ def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
     app_url: str = DEFAULT_APP_URL,
     open_browser: bool = True,
     force: bool = False,
+    enable_voice_notes: bool = False,
 ) -> str:
     """
     Validates the input folder, prints the steps a human takes to complete
@@ -71,6 +83,12 @@ def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
             Proceed even if output_dir already has a non-empty
             quality_labels.csv (which the browser export would overwrite).
             Defaults to False: refuse and raise instead.
+        enable_voice_notes (bool):
+            Opened with a project name, CytoRecorder normally skips its
+            default public-demo behavior (automatic BioImage Archive
+            fetch, per-object voice notes) and just waits for the folder
+            to be dragged in. Set this to open with that default demo
+            behavior (including voice notes) instead. Defaults to False.
 
     Returns:
         str:
@@ -90,7 +108,7 @@ def review(  # noqa: PLR0913 (CLI config surface: one kwarg per launch option)
             "export. Pass force=True to proceed anyway, move/rename the existing "
             "file first, or choose a different output_dir."
         )
-    url = build_app_url(app_url, project_name)
+    url = build_app_url(app_url, project_name, enable_voice_notes)
     # flush=True: stdout is fully buffered (not line-buffered) once it is a
     # pipe rather than a terminal, so a caller reading these lines live
     # (e.g. this package's own CLI tests) would otherwise block waiting on

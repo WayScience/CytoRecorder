@@ -21,6 +21,27 @@ def test_build_app_url_with_no_project_returns_the_bare_app_url() -> None:
     assert build_app_url("https://example.org/app/", "") == "https://example.org/app/"
 
 
+def test_build_app_url_omits_voice_by_default() -> None:
+    url = build_app_url("https://example.org/app/", "Bandicoot")
+    assert "voice" not in url
+
+
+def test_build_app_url_adds_voice_when_enabled() -> None:
+    url = build_app_url(
+        "https://example.org/app/", "Bandicoot", enable_voice_notes=True
+    )
+    assert url == "https://example.org/app/?project=Bandicoot&voice=1"
+
+
+def test_build_app_url_ignores_enable_voice_notes_without_a_project() -> None:
+    # Nothing to suppress in the browser without a project hint in the
+    # first place, so the demo already runs by default either way.
+    assert (
+        build_app_url("https://example.org/app/", "", enable_voice_notes=True)
+        == "https://example.org/app/"
+    )
+
+
 def test_review_defaults_the_project_name_to_the_input_folder_name(
     tmp_path: Path,
 ) -> None:
@@ -94,3 +115,16 @@ def test_review_ignores_an_existing_but_empty_csv_without_force(tmp_path: Path) 
     (output_dir / "quality_labels.csv").touch()  # zero bytes: nothing real to lose
     url = review(str(input_dir), str(output_dir), open_browser=False)
     assert "project=images" in url
+
+
+def test_review_passes_enable_voice_notes_through_to_the_url(tmp_path: Path) -> None:
+    input_dir = tmp_path / "images"
+    input_dir.mkdir()
+    (input_dir / "a.png").write_bytes(b"x")
+    url = review(
+        str(input_dir),
+        str(tmp_path / "out"),
+        open_browser=False,
+        enable_voice_notes=True,
+    )
+    assert "voice=1" in url

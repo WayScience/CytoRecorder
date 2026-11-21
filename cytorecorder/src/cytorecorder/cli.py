@@ -16,6 +16,7 @@ class cytorecorderCLI:
         app_url: str = DEFAULT_APP_URL,
         open_browser: bool = True,
         force: bool = False,
+        enable_voice_notes: bool = False,
     ) -> None:
         """
         Help a human complete a CytoRecorder whole-image quality review:
@@ -40,6 +41,13 @@ class cytorecorderCLI:
             force (bool):
                 Proceed even if output_dir already has a non-empty
                 quality_labels.csv. Defaults to False: refuse and raise.
+            enable_voice_notes (bool):
+                Opened with a project name, CytoRecorder normally skips
+                its default public-demo behavior (automatic BioImage
+                Archive fetch, per-object voice notes) and just waits for
+                the folder to be dragged in. Set this to open with that
+                default demo behavior (including voice notes) instead.
+                Defaults to False.
         """
         review(
             input_dir=input_dir,
@@ -48,6 +56,7 @@ class cytorecorderCLI:
             app_url=app_url,
             open_browser=open_browser,
             force=force,
+            enable_voice_notes=enable_voice_notes,
         )
 
 
