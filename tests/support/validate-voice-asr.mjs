@@ -11,7 +11,7 @@ import { chromium, firefox } from '@playwright/test';
 const root = process.cwd();
 const scratch =
   process.env.ASR_TEST_OUTPUT ||
-  join(process.env.HOME, '.hermes/cache/scratch/musivarium-asr-validation');
+  join(process.env.HOME, '.hermes/cache/scratch/cytorecorder-asr-validation');
 await mkdir(scratch, { recursive: true });
 const wav = await readFile(process.env.ASR_TEST_WAV);
 let pcm;
@@ -48,7 +48,7 @@ await build({
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://127.0.0.1');
-    const relative = decodeURIComponent(url.pathname.replace(/^\/musivarium\//, ''));
+    const relative = decodeURIComponent(url.pathname.replace(/^\/CytoRecorder\//, ''));
     if (relative.includes('..')) throw Error('Invalid path');
     const file = relative.startsWith('vendor/')
       ? join(root, 'public', relative)
@@ -98,7 +98,7 @@ page.on('request', (request) =>
 
 try {
   // Nested path deliberately exercises relative BASE_URL resolution like GitHub Pages.
-  await page.goto(`http://127.0.0.1:${port}/musivarium/tests/support/voice-asr-browser.html`);
+  await page.goto(`http://127.0.0.1:${port}/CytoRecorder/tests/support/voice-asr-browser.html`);
   await page.waitForFunction(() => window.asrValidation);
   await page.waitForTimeout(250);
   const startupRequests = requests.slice();
@@ -107,7 +107,7 @@ try {
   // The harness HTML is nested; use the deployed app root as the document base.
   await page.evaluate(() => {
     const base = document.createElement('base');
-    base.href = '/musivarium/';
+    base.href = '/CytoRecorder/';
     document.head.append(base);
   });
   const crossOriginIsolated = await page.evaluate(() => window.crossOriginIsolated);

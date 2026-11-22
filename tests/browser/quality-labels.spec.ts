@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { idrUrl, installIdrFixtures } from './support/idr-fixtures';
+import { firstDiscoveryRecord, installDiscoveryFixtures } from './support/bia-discovery-fixtures';
+import { idrUrl, installIdrFixtures, installImageFixtures } from './support/idr-fixtures';
 import { stubSaveFilePicker } from './support/save-file-picker';
 
 test.use({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
@@ -118,19 +120,43 @@ test('a local folder of PNG/TIFF images (including a subdirectory) opens as a st
   await expect(page.locator('#image-prev')).toBeDisabled();
 });
 
-test('a ?project= URL param (as opened by the cytorecorder-local review CLI) prefills the Project field', async ({
+test('a ?project= URL param (as opened by the cytorecorder review CLI) prefills the Project field and skips the auto-demo', async ({
   page,
   context,
 }) => {
-  await installIdrFixtures(context);
-  await page.goto(idrUrl('/?project=Bandicoot'));
-  await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
+  const queries = await installDiscoveryFixtures(context);
+  await page.goto('/?project=Bandicoot');
   // Prefilled before any image is loaded or Single image mode is even opened.
   await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
+  await expect(page.locator('#status')).toContainText('Bandicoot');
+  await expect(page.locator('#status')).toContainText('Drag the image folder');
+  await expect(page.locator('#csv')).toBeDisabled();
+  expect(queries).toEqual([]);
 
   await page.locator('#upload-image-input').setInputFiles(samplePng);
   // A manually loaded image's own project never overwrites an already-set field.
   await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
+});
+
+test('?project= with ?voice=1 (cytorecorder review --enable_voice_notes) keeps the default demo', async ({
+  page,
+  context,
+}) => {
+  const directory = new URL('./fixtures/bia3204/', import.meta.url);
+  const manifest = JSON.parse(readFileSync(new URL('manifest.json', directory), 'utf8'));
+  await installImageFixtures(context, directory, manifest);
+  const queries = await installDiscoveryFixtures(context);
+  await page.addInitScript(() => {
+    crypto.getRandomValues = ((array: Uint32Array) =>
+      array.fill(0)) as typeof crypto.getRandomValues;
+  });
+  await page.goto('/?project=Bandicoot&voice=1');
+  await expect(page.locator('#qc-project')).toHaveValue('Bandicoot');
+  await expect(page.locator('#image-title')).toHaveText(firstDiscoveryRecord.study_title);
+  await expect(page.locator('#csv')).toBeEnabled({ timeout: 45000 });
+  expect(queries.length).toBeGreaterThan(0);
+  await expect(page.locator('#mode-objects')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#voice-notes')).toBeVisible();
 });
 
 test('export falls back to a plain download when the Save-As picker API is unavailable (e.g. Firefox)', async ({

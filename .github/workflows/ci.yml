@@ -8,7 +8,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -30,8 +30,24 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y --no-install-recommends pulseaudio
           pulseaudio -D --exit-idle-time=-1 --disallow-exit
-          pactl load-module module-null-sink sink_name=musivarium_dummy sink_properties=device.description=Musivarium_Dummy_Output
-          pactl set-default-sink musivarium_dummy
+          pactl load-module module-null-sink sink_name=cytorecorder_dummy sink_properties=device.description=CytoRecorder_Dummy_Output
+          pactl set-default-sink cytorecorder_dummy
       - run: npm run test:browser
       - run: npm run test:static
       - run: npm audit --audit-level=moderate
+  cytorecorder:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cytorecorder
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+      - run: uv run pre-commit run --all-files
+      - run: uv run --frozen pytest

@@ -138,7 +138,7 @@ export class NotesStore {
       };
       request.onblocked = () => {
         blocked = true;
-        reject(Error('Close other Musivarium tabs and retry local note storage.'));
+        reject(Error('Close other CytoRecorder tabs and retry local note storage.'));
       };
       request.onerror = () => reject(request.error ?? Error('Could not open local note storage.'));
       request.onsuccess = () => {

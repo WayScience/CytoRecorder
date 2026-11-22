@@ -1,0 +1,26 @@
+---
+# workflow for drafting releases on GitHub, scoped to the cytorecorder
+# companion CLI (see .github/release-drafter.yml). The browser app deploys
+# continuously via pages.yml on every push and does not use releases.
+name: cytorecorder release drafter
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'cytorecorder/**'
+
+jobs:
+  draft_release:
+    permissions:
+      # write permission is required to create a github release
+      contents: write
+      # write permission is required for autolabeler
+      # otherwise, read permission is required at least
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

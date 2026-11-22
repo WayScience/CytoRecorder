@@ -44,11 +44,11 @@ node scripts/benchmark-reading.mjs \
   --report /path/to/benchmark.json
 ```
 
-The runner verifies every original fixture hash, identical requested object sets/bytes, native output digests and the single-plane scope. Raw local evidence is in `musivarium-parallel-reading/benchmark.json` under scratch; scratch availability is not a durable guarantee.
+The runner verifies every original fixture hash, identical requested object sets/bytes, native output digests and the single-plane scope. Raw local evidence was captured as `benchmark.json` in scratch; it is not checked in.
 
 ## Live preview evidence
 
-A fresh non-intercepted production-preview run completed 100 IDR objects with 135 observed progress updates, known partial-download progress, three concurrent image/label requests, 2,292,160 bytes of peak reserved decoded chunks, and focus outlines enabled. It received 1,674,611 response-body bytes without JavaScript errors. The machine-readable trace is in local scratch as `musivarium-validation/reading-preview.json`.
+A fresh non-intercepted production-preview run completed 100 IDR objects with 135 observed progress updates, known partial-download progress, three concurrent image/label requests, 2,292,160 bytes of peak reserved decoded chunks, and focus outlines enabled. It received 1,674,611 response-body bytes without JavaScript errors. The machine-readable trace was captured in local scratch as `reading-preview.json`.
 
 An earlier bounded live probe did not reach completion within its wait limit; the fresh repeat passed. This variability is why the replay result is not a WAN speed guarantee.
 

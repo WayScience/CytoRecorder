@@ -11,7 +11,7 @@ From the repository root, with installed npm dependencies, Node **22.18+** (nati
 ```sh
 node scripts/setup-model.mjs
 PYTHON=python node scripts/benchmark-segmentation.mjs \
-  --directory "$TMPDIR/musivarium-segmentation-evaluation" \
+  --directory "$TMPDIR/cytorecorder-segmentation-evaluation" \
   --download --repeats 5
 ```
 

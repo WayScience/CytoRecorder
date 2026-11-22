@@ -107,7 +107,7 @@ export class QualityLabelStore {
       };
       request.onblocked = () => {
         blocked = true;
-        reject(Error('Close other Musivarium/CytoRecorder tabs and retry quality-label storage.'));
+        reject(Error('Close other CytoRecorder tabs and retry quality-label storage.'));
       };
       request.onerror = () =>
         reject(request.error ?? Error('Could not open local quality-label storage.'));
