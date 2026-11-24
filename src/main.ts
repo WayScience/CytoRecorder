@@ -54,6 +54,7 @@ $('#app').innerHTML = `
 <div class="channel-legend-row"><span class="channel-legend-heading">Channels</span><div id="channel-legend" class="channel-legend"></div></div><details id="whole-preview" class="whole-preview" hidden><summary>Whole image preview</summary><div class="whole-preview-body"><canvas id="whole-preview-canvas" aria-label="Downsampled whole image preview"></canvas><p id="whole-preview-note" class="hint"></p></div></details>
 <div id="image-queue-nav" class="image-queue-nav" hidden><button id="image-prev" type="button" class="secondary">◀ Prev</button><span id="image-queue-position" class="hint"></span><button id="image-next" type="button" class="secondary">Next ▶</button></div>
 <div id="multi-select-bar" class="multi-select-bar" hidden><span id="multi-select-count"></span><button id="multi-select-annotate" type="button" class="primary">Annotate selected</button><button id="multi-select-clear" type="button" class="secondary">Clear selection</button></div>
+<div id="image-select-bar" class="multi-select-bar image-select-bar" hidden><span id="image-select-count"></span><input id="image-select-annotator" type="text" maxlength="500" placeholder="Your name" aria-label="Annotator name for batch quality labels"><div id="image-select-labels" class="quality-labels"></div><span id="image-select-status" class="hint" role="status" aria-live="polite"></span><button id="image-select-export" type="button" class="secondary">Export CSV</button><button id="image-select-clear" type="button" class="secondary">Clear selection</button></div>
 <div id="mosaic-scroll" class="mosaic-scroll" tabindex="0" aria-label="Scrollable single-object mosaic"><div id="empty" class="empty"><span class="empty-glyph" aria-hidden="true">▦</span><p>Small samples.<br>Unexpected details.</p><span>Choose a source, a plane, and a seed.</span></div><div id="mosaic" role="grid" aria-label="Single-object image crops"></div></div>
 <div class="mosaic-caption">Each tile is one object-centered crop, shown in grayscale with a green outline on the focused instance. Click or press Enter to inspect. A blue tile border means it already has a saved note. Use the corner checkbox to select several objects for one batch voice note. Display contrast is per crop; means are measured on raw pixels.</div>
 <p class="credit" id="credit">Default: IDR0076, Ali et al., CC BY 4.0. Verified 2D tissue cell labels. Display override: channel 42, DNA1-191Ir. Images hosted by IDR / EMBL-EBI.</p><div class="export-row"><span>Export this view</span><button id="csv" class="secondary" disabled>CSV</button><button id="parquet" class="secondary" disabled>Parquet</button><button id="raw" class="secondary" disabled>Native crops ZIP</button><button id="mosaic-png" class="secondary" disabled>Mosaic PNG</button><button id="manifest" class="secondary" disabled>Run JSON</button></div>
@@ -616,6 +617,10 @@ async function openImageQueueInternal(
     stop(running);
     clearResults();
     localFiles = undefined;
+    imageThumbs.clear();
+    imageThumbGeneration++;
+    multiSelectedImages.clear();
+    imageLabelsByPath = new Map();
     imageQueue = entries;
     imageQueueIndex = 0;
     imageQueueProject = project;
@@ -624,14 +629,16 @@ async function openImageQueueInternal(
     select('preset').value = 'custom';
     applyDecodedImage(image, entries[0], 0);
     $('#image-description').textContent =
-      'Local flat image file(s) (PNG/TIFF), not OME-NGFF: no physical scale, no channel metadata beyond TIFF pages, and no object segmentation in this mode.';
+      'Local flat image file(s) (PNG/TIFF), not OME-NGFF: no physical scale, no channel metadata beyond TIFF pages. The object view tiles the whole queue; single-image mode labels one image at a time.';
     $('#image-attribution').replaceChildren();
     $('#image-plane').textContent = '';
     $('#credit').textContent =
       'Local file: biological context and reuse terms must be checked with its provider.';
-    setViewModeAvailability(false);
-    viewMode = 'image';
+    setViewModeAvailability(imageQueue.length > 1);
+    viewMode = imageQueue.length > 1 ? 'objects' : 'image';
     applyViewMode();
+    renderGrid();
+    void refreshImageLabels();
     setStatus('');
   } catch (e) {
     setStatus(e instanceof Error ? e.message : String(e), true);
@@ -660,8 +667,10 @@ function updateImageQueueNav(): void {
   button('image-prev').disabled = imageQueueIndex === 0;
   button('image-next').disabled = imageQueueIndex === imageQueue.length - 1;
 }
-function drawFlatImagePreview(image: FlatImage): void {
-  const canvas = $<HTMLCanvasElement>('#whole-preview-canvas');
+/** Full-resolution in-memory canvas for a decoded flat image (the preview and
+ * tiled thumbnails both start from this). */
+function flatImageCanvas(image: FlatImage): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
   canvas.width = image.width;
   canvas.height = image.height;
   const context = canvas.getContext('2d')!;
@@ -680,10 +689,214 @@ function drawFlatImagePreview(image: FlatImage): void {
       0,
     );
   }
+  return canvas;
+}
+function drawFlatImagePreview(image: FlatImage): void {
+  const canvas = $<HTMLCanvasElement>('#whole-preview-canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  canvas.getContext('2d')!.drawImage(flatImageCanvas(image), 0, 0);
   $('#whole-preview-note').textContent =
     image.kind === 'rgb'
       ? `${image.width} × ${image.height} px · ${image.name}`
       : `${image.width} × ${image.height} px · ${image.channels.length} page(s) · ${image.name}`;
+}
+/** Draws a flat image scaled to fit entirely inside a square tile,
+ * letterboxed, with no fabricated scale metadata. */
+function drawFlatThumbnail(target: HTMLCanvasElement, full: HTMLCanvasElement, size: number): void {
+  target.width = size;
+  target.height = size;
+  const context = target.getContext('2d')!;
+  const scale = Math.min(size / full.width, size / full.height),
+    width = Math.max(1, Math.round(full.width * scale)),
+    height = Math.max(1, Math.round(full.height * scale));
+  context.imageSmoothingEnabled = full.width * scale < full.width;
+  context.drawImage(full, (size - width) / 2, (size - height) / 2, width, height);
+}
+/** One cached thumb per queued image (path-keyed), decoded lazily in the
+ * background as the tiled overview scrolls it into view — a dropped folder
+ * can hold many flat files and none of them may block first paint. */
+const imageThumbs = new Map<string, HTMLCanvasElement | 'pending' | 'error'>();
+let imageThumbGeneration = 0;
+let imageThumbJob: Promise<void> = Promise.resolve();
+const IMAGE_THUMB_SIZE = 256;
+/** Tiled-overview batch QC state: selected tile indexes plus the current
+ * annotator's saved label per path (badges reuse the object grid's
+ * `.annotated` treatment). */
+const multiSelectedImages = new Set<number>();
+let imageLabelsByPath = new Map<string, string>();
+function imageSelectedTileToggle(index: number, path: string): HTMLButtonElement {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'tile-select';
+  const isSelected = multiSelectedImages.has(index);
+  toggle.classList.toggle('active', isSelected);
+  toggle.setAttribute('aria-pressed', String(isSelected));
+  toggle.setAttribute(
+    'aria-label',
+    `${isSelected ? 'Deselect' : 'Select'} ${path} for batch quality labeling`,
+  );
+  toggle.innerHTML =
+    '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>';
+  toggle.onclick = (event) => {
+    event.stopPropagation();
+    if (multiSelectedImages.has(index)) multiSelectedImages.delete(index);
+    else multiSelectedImages.add(index);
+    renderGrid();
+    renderImageSelectBar();
+  };
+  return toggle;
+}
+function renderImageSelectBar(): void {
+  const bar = $('#image-select-bar'),
+    show = viewMode === 'objects' && imageQueue.length > 0 && multiSelectedImages.size > 0;
+  bar.hidden = !show;
+  if (!show) return;
+  // Keep the batch-bar annotator in step with the panel's (persisted) one
+  // without clobbering a name the person is currently typing here.
+  const annotator = $<HTMLInputElement>('#image-select-annotator');
+  if (!annotator.matches(':focus')) annotator.value = qualityPanel.annotator();
+  $('#image-select-count').textContent =
+    multiSelectedImages.size === 1
+      ? '1 image selected'
+      : `${multiSelectedImages.size} images selected`;
+}
+async function refreshImageLabels(): Promise<void> {
+  try {
+    imageLabelsByPath = await qualityPanel.labelsForPaths(imageQueue.map((item) => item.path));
+  } catch {
+    imageLabelsByPath = new Map();
+  }
+  if (viewMode === 'objects') renderGrid();
+}
+function buildImageSelectBar(): void {
+  const annotator = $<HTMLInputElement>('#image-select-annotator');
+  annotator.value = qualityPanel.annotator();
+  annotator.oninput = () => {
+    qualityPanel.setAnnotator(annotator.value);
+    void refreshImageLabels();
+  };
+  const labels = $('#image-select-labels');
+  labels.replaceChildren();
+  for (const category of qualityPanel.categoryList()) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'secondary quality-label-button';
+    b.textContent = category;
+    b.onclick = () =>
+      void perform(async () => {
+        const selected = [...multiSelectedImages]
+          .map((i) => imageQueue[i]?.path)
+          .filter((path): path is string => Boolean(path));
+        const project = qualityPanel.project() || imageQueueProject;
+        await qualityPanel.saveBatch(
+          selected.map((path) => ({ path, qualityLabel: category })),
+          project,
+        );
+        for (const path of selected) imageLabelsByPath.set(path, category);
+        multiSelectedImages.clear();
+        $('#image-select-status').textContent =
+          `Saved "${category}" for ${selected.length} image${selected.length === 1 ? '' : 's'}.`;
+        renderGrid();
+        renderImageSelectBar();
+      });
+    labels.append(b);
+  }
+  button('image-select-export').onclick = () => void perform(() => qualityPanel.exportCsv());
+  button('image-select-clear').onclick = () => {
+    multiSelectedImages.clear();
+    $('#image-select-status').textContent = '';
+    renderGrid();
+    renderImageSelectBar();
+  };
+}
+buildImageSelectBar();
+function ensureImageThumb(item: { path: string; file: File }): void {
+  if (imageThumbs.has(item.path)) return;
+  imageThumbs.set(item.path, 'pending');
+  const generation = imageThumbGeneration;
+  imageThumbJob = imageThumbJob
+    .then(async () => {
+      if (generation !== imageThumbGeneration) return;
+      const full = flatImageCanvas(await decodeQueueItem(item));
+      if (generation !== imageThumbGeneration) return;
+      const thumb = document.createElement('canvas');
+      drawFlatThumbnail(thumb, full, IMAGE_THUMB_SIZE);
+      imageThumbs.set(item.path, thumb);
+      renderGrid();
+    })
+    .catch(() => {
+      if (generation === imageThumbGeneration) {
+        imageThumbs.set(item.path, 'error');
+        renderGrid();
+      }
+    });
+}
+function imageThumbnail(item: { path: string }): HTMLCanvasElement | undefined {
+  const cached = imageThumbs.get(item.path);
+  return cached === 'pending' || cached === 'error' || !cached ? undefined : cached;
+}
+/** The objects-mode mosaic for a local queue: one square tile per queued
+ * whole image (letterboxed, no fabricated scale), decoded lazily. Clicking a
+ * tile opens that image in single-image mode where whole-image QC labeling
+ * lives — browsing is tiled, labeling stays per image. */
+function renderImageTiles(): void {
+  const grid = $('#mosaic'),
+    scroll = $('#mosaic-scroll'),
+    size = Number(input('size').value),
+    step = size + 10,
+    columns = Math.max(1, Math.floor((scroll.clientWidth - 16) / step)),
+    rows = Math.ceil(imageQueue.length / columns),
+    first = Math.max(0, Math.floor(scroll.scrollTop / step) - 1),
+    last = Math.min(rows, Math.ceil((scroll.scrollTop + scroll.clientHeight) / step) + 1);
+  grid.style.height = `${rows * step}px`;
+  grid.setAttribute('aria-rowcount', String(rows));
+  grid.setAttribute('aria-colcount', String(columns));
+  grid.replaceChildren();
+  $('#empty').hidden = imageQueue.length > 0;
+  for (let row = first; row < last; row++)
+    for (let col = 0; col < columns; col++) {
+      const index = row * columns + col,
+        item = imageQueue[index];
+      if (!item) break;
+      ensureImageThumb(item);
+      const tile = document.createElement('button');
+      tile.className = 'object-tile image-tile';
+      tile.dataset.index = String(index);
+      tile.style.cssText = `width:${size}px;height:${size}px;top:${row * step}px;left:${col * step + 8}px`;
+      tile.setAttribute('role', 'gridcell');
+      tile.setAttribute('aria-label', `Image ${item.path}, ${index + 1} of ${imageQueue.length}`);
+      tile.setAttribute('aria-rowindex', String(row + 1));
+      tile.setAttribute('aria-colindex', String(col + 1));
+      const canvas = document.createElement('canvas');
+      const thumb = imageThumbnail(item);
+      if (thumb) {
+        drawFlatThumbnail(canvas, thumb, size);
+      } else {
+        canvas.width = canvas.height = size;
+        const context = canvas.getContext('2d')!;
+        context.fillStyle = '#101b20';
+        context.fillRect(0, 0, size, size);
+        context.fillStyle = '#56656a';
+        context.font = '20px sans-serif';
+        context.textAlign = 'center';
+        context.fillText(imageThumbs.get(item.path) === 'error' ? '×' : '…', size / 2, size / 2);
+      }
+      const label = imageLabelsByPath.get(item.path);
+      tile.classList.toggle('annotated', Boolean(label));
+      tile.setAttribute(
+        'aria-label',
+        `Image ${item.path}, ${index + 1} of ${imageQueue.length}${label ? `, labeled ${label}` : ''}`,
+      );
+      const caption = document.createElement('span');
+      caption.textContent = item.path.split('/').pop() ?? item.path;
+      tile.append(canvas, caption, imageSelectedTileToggle(index, item.path));
+      tile.onclick = () => {
+        viewMode = 'image';
+        void loadQueueImage(index);
+      };
+      grid.append(tile);
+    }
 }
 /** Not the OME-Zarr `#channel-legend` population path: a flat TIFF's pages
  * have no NGFF channel metadata, only a per-page index to toggle on/off. */
@@ -717,14 +930,15 @@ function setViewModeAvailability(objectsAvailable: boolean): void {
  * workflow (issue: "Add whole-image quality annotation workflow") — the two
  * panels are mutually exclusive, matching the two mutually exclusive views. */
 function applyViewMode(): void {
-  const isImage = viewMode === 'image';
+  const isImage = viewMode === 'image',
+    queueTiled = imageQueue.length > 0 && !result && !isImage;
   $('#mosaic-scroll').hidden = isImage;
-  $('.mosaic-caption').hidden = isImage;
-  $('#multi-select-bar').hidden = isImage || multiSelected.size === 0;
+  $('.mosaic-caption').hidden = isImage || queueTiled;
+  $('#multi-select-bar').hidden = isImage || queueTiled || multiSelected.size === 0;
   $<HTMLDetailsElement>('#whole-preview').classList.toggle('primary', isImage);
   button('mode-objects').setAttribute('aria-pressed', String(!isImage));
   button('mode-image').setAttribute('aria-pressed', String(isImage));
-  $('#voice-notes').hidden = isImage;
+  $('#voice-notes').hidden = isImage || queueTiled;
   $('#quality-panel').hidden = !isImage;
   if (isImage) {
     $<HTMLDetailsElement>('#whole-preview').hidden = false;
@@ -738,12 +952,18 @@ function applyViewMode(): void {
     if (!result) $<HTMLDetailsElement>('#whole-preview').hidden = true;
     $('#image-queue-nav').hidden = true;
     qualityPanel.setImage(undefined);
+    if (queueTiled) {
+      $('#result-count').textContent =
+        `${imageQueue.length} local image${imageQueue.length === 1 ? '' : 's'} · click one to open it for labeling`;
+      renderImageSelectBar();
+    }
   }
 }
 button('mode-objects').onclick = () => {
   if (viewMode === 'objects' || button('mode-objects').disabled) return;
   viewMode = 'objects';
   applyViewMode();
+  renderGrid();
 };
 button('mode-image').onclick = () => {
   if (viewMode === 'image') return;
@@ -948,6 +1168,10 @@ function clearResults() {
   imageQueue = [];
   imageQueueIndex = 0;
   imageQueueProject = '';
+  imageThumbs.clear();
+  imageThumbGeneration++;
+  multiSelectedImages.clear();
+  imageLabelsByPath = new Map();
   result = undefined;
   morphem.stop();
   visible = [];
@@ -1117,6 +1341,10 @@ function displayOptions(cell: Cell) {
   };
 }
 function renderGrid() {
+  if (imageQueue.length && !result) {
+    renderImageTiles();
+    return;
+  }
   const grid = $('#mosaic'),
     scroll = $('#mosaic-scroll'),
     size = Number(input('size').value),

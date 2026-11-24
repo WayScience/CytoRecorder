@@ -88,6 +88,69 @@ export class QualityPanel {
     localStorage.setItem(PROJECT_KEY, name);
   }
 
+  /** The tiled-overview batch bar shares the panel's annotator identity, so
+   * labels applied to many images at once and labels applied to one image
+   * at a time resume under the same (image, annotator) keys. */
+  annotator(): string {
+    return this.annotatorInput.value.trim();
+  }
+
+  project(): string {
+    return this.projectInput.value.trim();
+  }
+
+  categoryList(): string[] {
+    return [...this.categories];
+  }
+
+  setAnnotator(value: string): void {
+    this.annotatorInput.value = value;
+    localStorage.setItem(ANNOTATOR_KEY, this.annotatorInput.value);
+    void this.refresh();
+  }
+
+  /** The current annotator's saved label per path (one IndexedDB read, mapped
+   * locally) so the tiled overview can badge already-labeled tiles. */
+  async labelsForPaths(paths: string[]): Promise<Map<string, string>> {
+    const result = new Map<string, string>(),
+      annotator = this.annotator();
+    if (!annotator) return result;
+    const all = await this.store.list();
+    for (const label of all)
+      if (label.annotator === annotator && paths.includes(label.imagePath))
+        result.set(label.imagePath, label.qualityLabel);
+    return result;
+  }
+
+  /** Applies one category to many whole images at once. Upserts with the same
+   * (image, annotator) composite id: a prior label keeps its created_at and
+   * gains an updated_at; images not yet labeled start fresh records. */
+  async saveBatch(
+    items: { path: string; qualityLabel: string }[],
+    project: string,
+  ): Promise<number> {
+    const annotator = this.annotator();
+    if (!annotator) throw Error('Enter your name as the annotator before saving quality labels.');
+    const all = await this.store.list(),
+      existing = new Map(all.map((label) => [label.id, label]));
+    for (const item of items) {
+      const record = createQualityLabel(
+        item.path,
+        project,
+        annotator,
+        item.qualityLabel,
+        existing.get(qualityLabelId(item.path, annotator)),
+      );
+      await this.store.put(record);
+    }
+    await this.updateCount();
+    return items.length;
+  }
+
+  exportCsv(): Promise<void> {
+    return this.exportCsvInternal();
+  }
+
   /** Switches the panel to a newly shown whole image; undefined disables it
    * (nothing to label — e.g. back in single-objects mode). */
   setImage(image: { path: string; project: string } | undefined): void {
@@ -159,7 +222,7 @@ export class QualityPanel {
     }
   }
 
-  private async exportCsv(): Promise<void> {
+  private async exportCsvInternal(): Promise<void> {
     try {
       const all = await this.store.list(),
         csv = exportQualityLabelsCsv(all),

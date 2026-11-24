@@ -45,7 +45,7 @@ Recording a voice note terminates the feature worker immediately; closing voice 
 
 ## Local whole-image quality review
 
-Single image mode displays the whole image for PNG/TIFF files and shows a whole-image preview for OME-Zarr sources. Whole-image quality labeling is available for PNG/TIFF files only. Choose Good, Out-of-focus, or Debris; labels persist per annotator and can be exported to CSV.
+Single image mode displays the whole image for PNG/TIFF files and shows a whole-image preview for OME-Zarr sources. Whole-image quality labeling is available for PNG/TIFF files only. Choose Good, Out-of-focus, or Debris; labels persist per annotator and can be exported to CSV. A folder of local images opens as a tiled overview like the object mosaic; select several tiles there to apply one label to all of them at once, then export the CSV.
 
 [`cytorecorder`](cytorecorder/) is an optional local CLI that scans a folder of images recursively and opens this app for that review — see [its docs](docs/cytorecorder.md).
 
